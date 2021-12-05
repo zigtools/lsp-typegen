@@ -16,18 +16,34 @@ fn writeDescription(writer: anytype, obj: std.json.ObjectMap) !void {
     }
 }
 
+fn writeUnionItem(writer: anytype, item: std.json.Value) anyerror!void {
+    switch (item) {
+        .String => |type_str| {
+            if (std.mem.eql(u8, type_str, "null")) return;
+            try writer.print("{s}: {s},\n", .{ type_str, mapType(type_str, true) });
+        },
+        .Array => |arr| {
+            for (arr.items) |item2| try writeUnionItem(writer, item2);
+        },
+        .Object => |obj| {
+            if (obj.get("type")) |t|
+                try writeUnionItem(writer, t)
+            else {
+                // TODO: WriteTypeName
+                try writeType(writer, obj);
+                try writer.writeAll(": ");
+                try writeType(writer, obj);
+                try writer.writeAll(",\n");
+            }
+        },
+        else => {},
+    }
+}
+
 fn writeUnion(writer: anytype, arr: std.json.Array, required: bool) anyerror!void {
     _ = required;
     try writer.writeAll("union(enum) {\n");
-    for (arr.items) |item| {
-        switch (item) {
-            .String => |type_str| {
-                if (std.mem.eql(u8, type_str, "null")) continue;
-                try writer.print("{s}: {s},\n", .{ type_str, mapType(type_str, true) });
-            },
-            else => {},
-        }
-    }
+    for (arr.items) |item| try writeUnionItem(writer, item);
 }
 
 fn isOptional(arr: std.json.Array) bool {
@@ -86,23 +102,22 @@ fn writeType(writer: anytype, obj: std.json.ObjectMap) anyerror!void {
             },
         }
     } else if (obj.get("$ref")) |ref| {
-        try writer.writeAll(ref.String[std.mem.lastIndexOf(u8, ref.String, "/").? + 1 ..]);
-    } //else if (obj.get("anyOf")) |any_of| {
-    //_ = any_of;
-    // try writeType(writer, obj);
-    //}
-    else {
+        try writer.writeAll(mapType(ref.String[std.mem.lastIndexOf(u8, ref.String, "/").? + 1 ..], true));
+    } else if (obj.get("anyOf")) |any_of| {
+        try writeUnion(writer, any_of.Array, false);
+        try writer.writeAll("}");
+    } else {
         try writer.writeAll("NoTypeOrRefPlaceholder");
     }
 }
 
 fn mapType(name: []const u8, infer_int: bool) []const u8 {
-    if (std.mem.eql(u8, name, "integer") or (infer_int and std.mem.eql(u8, name, "number"))) return "i64";
+    if (std.mem.indexOf(u8, name, "integer") != null or std.mem.indexOf(u8, name, "decimal") != null or (infer_int and std.mem.eql(u8, name, "number"))) return "i64";
     if (std.mem.eql(u8, name, "string")) return "[]const u8";
     if (std.mem.eql(u8, name, "boolean")) return "bool";
     if (std.mem.eql(u8, name, "null")) return "null";
 
-    return "UnmappedType";
+    return name;
 }
 
 fn writeStruct(writer: anytype, props: std.json.ObjectMap) anyerror!void {
@@ -148,10 +163,13 @@ pub fn main() anyerror!void {
     var definition = tree.root.Object.get("definitions").?;
 
     var def_iterator = definition.Object.iterator();
-    while (def_iterator.next()) |def_entry| {
+    itt: while (def_iterator.next()) |def_entry| {
         // Excludes
         if (std.mem.startsWith(u8, def_entry.key_ptr.*, "Proposed")) continue;
         if (std.mem.startsWith(u8, def_entry.key_ptr.*, "Protocol")) continue;
+        if (std.mem.startsWith(u8, def_entry.key_ptr.*, "decimal")) continue;
+        if (std.mem.startsWith(u8, def_entry.key_ptr.*, "integer")) continue;
+        if (std.mem.startsWith(u8, def_entry.key_ptr.*, "uinteger")) continue;
 
         var def_obj = def_entry.value_ptr.Object;
 
@@ -188,6 +206,12 @@ pub fn main() anyerror!void {
             try writeStruct(writer, props);
         } else if (def_obj.get("type") != null and def_obj.get("type").? == .Array) {
             try writeUnion(writer, def_obj.get("type").?.Array, false);
+        } else if (def_obj.get("$ref")) |ref| {
+            var ref_str = ref.String[std.mem.lastIndexOf(u8, ref.String, "/").? + 1 ..];
+
+            try writer.writeAll(ref_str);
+            try writer.writeAll(";\n");
+            continue :itt;
         } else {
             try writer.writeAll("struct {");
         }

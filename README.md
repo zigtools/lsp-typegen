@@ -8,13 +8,13 @@ Crappy LSP spec-based Zig struct generator. It "works."
 # Install submodules
 git submodule update --init --recursive
 
-## Install TSJSONSchema
-npm install typescript-json-schema -g`
+# Install TSJSONSchema
+npm install typescript-json-schema -g
 
-## Generate schema
+# Generate schema
 typescript-json-schema vendor/vscode-languageserver-node/protocol/src/common/tsconfig.json * --required --aliasRefs > src/schema.json
 
-## Translate schema to Zig
+# Translate schema to Zig
 zig build run
 
 ## Format so it looks good

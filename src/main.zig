@@ -5,7 +5,7 @@ var tree: std.json.ValueTree = undefined;
 fn mustEscape(name: []const u8) bool {
     if (name[0] >= '0' and name[0] <= '9')
         return true;
-    if (std.mem.eql(u8, name, "type")) return true;
+    if (std.zig.Token.keywords.has(name)) return true;
     return false;
 }
 
@@ -168,8 +168,26 @@ fn writeAllOf(writer: anytype, arr: std.json.Array) anyerror!void {
     }
 }
 
+const FmtVarEscape = struct {
+    str: []const u8,
+    pub fn format(value: FmtVarEscape, comptime fmt: []const u8, options: std.fmt.FormatOptions, writer: anytype) !void {
+        _ = fmt;
+        _ = options;
+
+        const me = mustEscape(value.str);
+        if (me) try writer.writeAll("@\"");
+        try writer.writeAll(value.str);
+        if (me) try writer.writeAll("\"");
+    }
+};
+
+fn fmtVarEscape(str: []const u8) FmtVarEscape {
+    return .{ .str = str };
+}
+
 pub fn main() anyerror!void {
     const allocator = std.heap.page_allocator;
+    const base = @embedFile("base.zig");
 
     var schema_file = try std.fs.cwd().openFile("src/schema.json", .{});
     defer schema_file.close();
@@ -184,6 +202,8 @@ pub fn main() anyerror!void {
     var output_file = try std.fs.cwd().createFile("lsp.zig", .{});
     defer output_file.close();
     var writer = output_file.writer();
+
+    try writer.writeAll(base);
 
     var definition = tree.root.Object.get("definitions").?;
 
@@ -213,12 +233,17 @@ pub fn main() anyerror!void {
 
         try writer.writeAll(" = ");
 
-        if (def_obj.get("enum")) |_| {
+        if (def_obj.get("enum")) |en| {
+            const enum_values = en.Array;
             const enum_backing_type = def_obj.get("type").?.String;
 
             if (std.mem.eql(u8, enum_backing_type, "string")) {
                 //
                 try writer.print("enum {{ ", .{});
+                for (enum_values.items) |val| {
+                    try writer.print("{s},", .{fmtVarEscape(val.String)});
+                }
+                try writer.writeAll("usingnamespace StringBackedEnumStringify(@This());");
             } else {
                 try writer.print(
                     \\enum({s}) {{

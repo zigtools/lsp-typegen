@@ -37,10 +37,19 @@ jobs:
       - name: Build artifacts
         run: |
           mkdir -p "artifacts/"
+
+          cd vendor/vscode-languageserver-node
+          npm i
+          cd ../..
+
+          echo $'{ "extends": "../../tsconfig.base.json", "compilerOptions": { "tsBuildInfoFile":"../../lib/common/compile.tsbuildInfo", "rootDir": ".", "outDir": "../../lib/common", "composite": true }, "include": [ "." ], "references": [ { "path": "../../../types/tsconfig.json" }, { "path": "../../../jsonrpc/src/common/tsconfig.json" } ] }' > vendor/vscode-languageserver-node/protocol/src/tsconfig.json
+
           npm install typescript-json-schema -g
           typescript-json-schema vendor/vscode-languageserver-node/protocol/src/common/tsconfig.json * --required --aliasRefs > src/schema.json
+          
           zig build run
           zig fmt lsp.zig
+          
           mv lsp.zig artifacts/lsp.zig
           mv src/schema.json artifacts/schema.json
 

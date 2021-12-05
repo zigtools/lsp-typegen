@@ -43,6 +43,7 @@ jobs:
           cd ../../..
 
           echo $'{ "extends": "../../tsconfig.base.json", "compilerOptions": { "tsBuildInfoFile":"../../lib/common/compile.tsbuildInfo", "rootDir": ".", "outDir": "../../lib/common", "composite": true }, "include": [ "." ], "references": [ { "path": "../../../types/tsconfig.json" }, { "path": "../../../jsonrpc/src/common/tsconfig.json" } ] }' > vendor/vscode-languageserver-node/protocol/src/common/tsconfig.json
+          echo $'{ "extends": "../../tsconfig.base.json", "compilerOptions": { "tsBuildInfoFile":"../../lib/common/compile.tsbuildInfo", "rootDir": ".", "outDir": "../../lib/common", "composite": true }, "include": [ "." ], "exclude": [ "test" ] }' > vendor/vscode-languageserver-node/jsonrpc/src/common/tsconfig.json
 
           npm install typescript-json-schema -g
           typescript-json-schema vendor/vscode-languageserver-node/protocol/src/common/tsconfig.json * --required --aliasRefs > src/schema.json

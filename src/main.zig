@@ -1,7 +1,5 @@
 const std = @import("std");
 
-const schema_file = @embedFile("schema.json");
-
 fn mustEscape(name: []const u8) bool {
     if (name[0] >= '0' and name[0] <= '9')
         return true;
@@ -133,8 +131,14 @@ fn writeStruct(writer: anytype, props: std.json.ObjectMap) anyerror!void {
 pub fn main() anyerror!void {
     const allocator = std.heap.page_allocator;
 
+    var schema_file = try std.fs.cwd().openFile("src/schema.json", .{});
+    defer schema_file.close();
+
+    var schema_file_data = try schema_file.readToEndAlloc(allocator, (try schema_file.stat()).size);
+    defer allocator.free(schema_file_data);
+
     var parser = std.json.Parser.init(allocator, false);
-    var tree = try parser.parse(schema_file);
+    var tree = try parser.parse(schema_file_data);
     defer tree.deinit();
 
     var output_file = try std.fs.cwd().createFile("lsp.zig", .{});

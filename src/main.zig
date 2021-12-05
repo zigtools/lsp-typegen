@@ -44,6 +44,7 @@ fn writeUnion(writer: anytype, arr: std.json.Array, required: bool) anyerror!voi
     _ = required;
     try writer.writeAll("union(enum) {\n");
     for (arr.items) |item| try writeUnionItem(writer, item);
+    if (!required) try writer.writeAll("none: void,");
 }
 
 fn isOptional(arr: std.json.Array) bool {
@@ -82,7 +83,7 @@ fn writeType(writer: anytype, obj: std.json.ObjectMap) anyerror!void {
             .Array => |types| {
                 if (isOptional(types)) try writer.writeByte('?');
 
-                var required = false;
+                var required = required_items != null;
                 if (required_items) |reqs| {
                     rr: for (reqs.items) |i| {
                         for (types.items) |t| {
@@ -104,7 +105,8 @@ fn writeType(writer: anytype, obj: std.json.ObjectMap) anyerror!void {
     } else if (obj.get("$ref")) |ref| {
         try writer.writeAll(mapType(ref.String[std.mem.lastIndexOf(u8, ref.String, "/").? + 1 ..], true));
     } else if (obj.get("anyOf")) |any_of| {
-        try writeUnion(writer, any_of.Array, false);
+        var required = required_items != null;
+        try writeUnion(writer, any_of.Array, required);
         try writer.writeAll("}");
     } else {
         try writer.writeAll("NoTypeOrRefPlaceholder");

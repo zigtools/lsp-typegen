@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    paths:
+    - '**.zig'
+    - '**.yml'
+  pull_request:
+    paths:
+    - '**.zig'
+    - '**.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - uses: goto-bus-stop/setup-zig@v1
+        with:
+          version: master
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Build
+        run: zig build
+
+      - name: Run Tests
+        run: zig build test
+
+      - name: Build artifacts
+        run: |
+          mkdir -p "artifacts/"
+          npm install typescript-json-schema -g
+          typescript-json-schema vendor/vscode-languageserver-node/protocol/src/common/tsconfig.json * --required --aliasRefs > src/schema.json
+          zig build run
+          zig fmt lsp.zig
+          mv lsp.zig artifacts/lsp.zig
+          mv src/schema.json artifacts/schema.json
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: builds
+          path: artifacts/*

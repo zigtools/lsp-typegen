@@ -1,0 +1,3 @@
+/zig-*
+/lsp.zig
+src/schema.json

@@ -1,5 +1,7 @@
 const std = @import("std");
 
+var tree: std.json.ValueTree = undefined;
+
 fn mustEscape(name: []const u8) bool {
     if (name[0] >= '0' and name[0] <= '9')
         return true;
@@ -74,6 +76,7 @@ fn writeType(writer: anytype, obj: std.json.ObjectMap) anyerror!void {
                         return;
                     }
 
+                    try writer.writeAll("struct {\n");
                     try writeStruct(writer, obj.get("properties").?.Object);
                     try writer.writeAll("}");
                 } else {
@@ -108,7 +111,11 @@ fn writeType(writer: anytype, obj: std.json.ObjectMap) anyerror!void {
         var required = required_items != null;
         try writeUnion(writer, any_of.Array, required);
         try writer.writeAll("}");
-    } else {
+    }
+    // else if (obj.get("allOf")) |all_of| {
+    //     try writer.writeAll("}");
+    // }
+    else {
         try writer.writeAll("NoTypeOrRefPlaceholder");
     }
 }
@@ -123,7 +130,6 @@ fn mapType(name: []const u8, infer_int: bool) []const u8 {
 }
 
 fn writeStruct(writer: anytype, props: std.json.ObjectMap) anyerror!void {
-    try writer.writeAll("struct {\n");
     var props_iterator = props.iterator();
 
     while (props_iterator.next()) |prop_entry| {
@@ -145,6 +151,23 @@ fn writeStruct(writer: anytype, props: std.json.ObjectMap) anyerror!void {
     }
 }
 
+fn sliceRef(ref: []const u8) []const u8 {
+    return ref[std.mem.lastIndexOf(u8, ref, "/").? + 1 ..];
+}
+
+fn writeAllOf(writer: anytype, arr: std.json.Array) anyerror!void {
+    try writer.writeAll("struct {\n");
+    // try writeStruct(writer, props);
+    for (arr.items) |item| {
+        var obj = item.Object;
+
+        if (obj.get("$ref")) |ref_value| {
+            var ref = sliceRef(ref_value.String);
+            try writeStruct(writer, tree.root.Object.get("definitions").?.Object.get(ref).?.Object.get("properties").?.Object);
+        }
+    }
+}
+
 pub fn main() anyerror!void {
     const allocator = std.heap.page_allocator;
 
@@ -155,7 +178,7 @@ pub fn main() anyerror!void {
     defer allocator.free(schema_file_data);
 
     var parser = std.json.Parser.init(allocator, false);
-    var tree = try parser.parse(schema_file_data);
+    tree = try parser.parse(schema_file_data);
     defer tree.deinit();
 
     var output_file = try std.fs.cwd().createFile("lsp.zig", .{});
@@ -167,6 +190,7 @@ pub fn main() anyerror!void {
     var def_iterator = definition.Object.iterator();
     itt: while (def_iterator.next()) |def_entry| {
         // Excludes
+        if (def_entry.key_ptr.*[0] == '_') continue;
         if (std.mem.startsWith(u8, def_entry.key_ptr.*, "Proposed")) continue;
         if (std.mem.startsWith(u8, def_entry.key_ptr.*, "Protocol")) continue;
         if (std.mem.startsWith(u8, def_entry.key_ptr.*, "decimal")) continue;
@@ -205,15 +229,18 @@ pub fn main() anyerror!void {
         } else if (def_obj.get("properties")) |props_obj| {
             var props = props_obj.Object;
 
+            try writer.writeAll("struct {\n");
             try writeStruct(writer, props);
         } else if (def_obj.get("type") != null and def_obj.get("type").? == .Array) {
             try writeUnion(writer, def_obj.get("type").?.Array, false);
         } else if (def_obj.get("$ref")) |ref| {
-            var ref_str = ref.String[std.mem.lastIndexOf(u8, ref.String, "/").? + 1 ..];
+            var ref_str = sliceRef(ref.String);
 
             try writer.writeAll(ref_str);
             try writer.writeAll(";\n");
             continue :itt;
+        } else if (def_obj.get("allOf")) |all_of| {
+            try writeAllOf(writer, all_of.Array);
         } else {
             try writer.writeAll("struct {");
         }

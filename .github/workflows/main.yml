@@ -52,10 +52,9 @@ jobs:
           zig fmt lsp.zig
           
           mv lsp.zig artifacts/lsp.zig
-          mv src/schema.json artifacts/schema.json
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: builds
-          path: artifacts/*
+          name: lsp.zig
+          path: artifacts/lsp.zig

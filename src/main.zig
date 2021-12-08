@@ -106,7 +106,7 @@ fn writeType(writer: anytype, obj: std.json.ObjectMap) anyerror!void {
             },
         }
     } else if (obj.get("$ref")) |ref| {
-        try writer.writeAll(mapType(ref.String[std.mem.lastIndexOf(u8, ref.String, "/").? + 1 ..], true));
+        try writer.writeAll(cleanRef(mapType(ref.String[std.mem.lastIndexOf(u8, ref.String, "/").? + 1 ..], true)));
     } else if (obj.get("anyOf")) |any_of| {
         var required = required_items != null;
         try writeUnion(writer, any_of.Array, required);
@@ -125,6 +125,7 @@ fn mapType(name: []const u8, infer_int: bool) []const u8 {
     if (std.mem.eql(u8, name, "string")) return "[]const u8";
     if (std.mem.eql(u8, name, "boolean")) return "bool";
     if (std.mem.eql(u8, name, "null")) return "null";
+    if (std.mem.eql(u8, name, "object")) return "json.ObjectMap";
 
     return name;
 }
@@ -153,6 +154,10 @@ fn writeStruct(writer: anytype, props: std.json.ObjectMap) anyerror!void {
 
 fn sliceRef(ref: []const u8) []const u8 {
     return ref[std.mem.lastIndexOf(u8, ref, "/").? + 1 ..];
+}
+
+fn cleanRef(unslashed: []const u8) []const u8 {
+    return if (std.mem.lastIndexOf(u8, unslashed, "_")) |ind| unslashed[0..ind] else unslashed;
 }
 
 fn writeAllOf(writer: anytype, arr: std.json.Array) anyerror!void {
@@ -219,16 +224,24 @@ pub fn main() anyerror!void {
 
         var def_obj = def_entry.value_ptr.Object;
 
+        if (def_obj.get("$ref")) |ref| {
+            var ref_str = sliceRef(ref.String);
+
+            std.log.debug("Discarding direct point: {s} -> {s}", .{ def_entry.key_ptr.*, ref_str });
+            continue :itt;
+        }
+
         try writeDescription(writer, def_obj);
 
         try writer.writeAll("pub const ");
 
-        if (std.mem.indexOfAny(u8, def_entry.key_ptr.*, "$.<") != null) {
+        var cleaned = cleanRef(def_entry.key_ptr.*);
+        if (std.mem.indexOfAny(u8, cleaned, "$.<") != null) {
             try writer.print(
                 \\@"{s}"
-            , .{def_entry.key_ptr.*});
+            , .{cleaned});
         } else {
-            try writer.writeAll(def_entry.key_ptr.*);
+            try writer.writeAll(cleaned);
         }
 
         try writer.writeAll(" = ");
@@ -258,10 +271,8 @@ pub fn main() anyerror!void {
             try writeStruct(writer, props);
         } else if (def_obj.get("type") != null and def_obj.get("type").? == .Array) {
             try writeUnion(writer, def_obj.get("type").?.Array, false);
-        } else if (def_obj.get("$ref")) |ref| {
-            var ref_str = sliceRef(ref.String);
-
-            try writer.writeAll(ref_str);
+        } else if (def_obj.get("type") != null and def_obj.get("type").? == .String) {
+            try writer.writeAll(mapType(def_obj.get("type").?.String, true));
             try writer.writeAll(";\n");
             continue :itt;
         } else if (def_obj.get("allOf")) |all_of| {

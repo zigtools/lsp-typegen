@@ -126,6 +126,7 @@ fn mapType(name: []const u8, infer_int: bool) []const u8 {
     if (std.mem.eql(u8, name, "boolean")) return "bool";
     if (std.mem.eql(u8, name, "null")) return "null";
     if (std.mem.eql(u8, name, "object")) return "json.ObjectMap";
+    if (std.mem.eql(u8, name, "array")) return "json.Array";
 
     return name;
 }
@@ -211,11 +212,13 @@ pub fn main() anyerror!void {
     try writer.writeAll(base);
 
     var definition = tree.root.Object.get("definitions").?;
+    var name_store = std.ArrayList([]const u8).init(allocator);
 
     var def_iterator = definition.Object.iterator();
     itt: while (def_iterator.next()) |def_entry| {
         // Excludes
         if (def_entry.key_ptr.*[0] == '_') continue;
+        if (def_entry.key_ptr.*[0] == 'T') continue;
         if (std.mem.startsWith(u8, def_entry.key_ptr.*, "Proposed")) continue;
         if (std.mem.startsWith(u8, def_entry.key_ptr.*, "Protocol")) continue;
         if (std.mem.startsWith(u8, def_entry.key_ptr.*, "decimal")) continue;
@@ -231,11 +234,20 @@ pub fn main() anyerror!void {
             continue :itt;
         }
 
+        var cleaned = cleanRef(def_entry.key_ptr.*);
+
+        for (name_store.items) |name| {
+            if (std.mem.eql(u8, name, cleaned)) {
+                std.log.debug("Discarding duplicate definition: {s}", .{name});
+                continue :itt;
+            }
+        }
+
         try writeDescription(writer, def_obj);
 
         try writer.writeAll("pub const ");
 
-        var cleaned = cleanRef(def_entry.key_ptr.*);
+        try name_store.append(cleaned);
         if (std.mem.indexOfAny(u8, cleaned, "$.<") != null) {
             try writer.print(
                 \\@"{s}"
@@ -277,6 +289,8 @@ pub fn main() anyerror!void {
             continue :itt;
         } else if (def_obj.get("allOf")) |all_of| {
             try writeAllOf(writer, all_of.Array);
+        } else if (def_obj.get("anyOf")) |any_of| {
+            try writeUnion(writer, any_of.Array, false);
         } else {
             try writer.writeAll("struct {");
         }

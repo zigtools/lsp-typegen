@@ -9,13 +9,15 @@ Crappy LSP spec-based Zig struct generator. It "works."
 git submodule update --init --recursive
 
 # Install TSJSONSchema
-npm install typescript-json-schema -g
+npm install typedoc --save-dev
 
-# Generate schema
-typescript-json-schema vendor/vscode-languageserver-node/protocol/src/common/tsconfig.json * --required --aliasRefs > src/schema.json
+# Generate schemas
+npx typedoc --tsconfig vendor/vscode-languageserver-node/types/src/tsconfig.json vendor/vscode-languageserver-node/types/src/main.ts --json src/types_schema.json --emit docs
+
+npx typedoc --tsconfig vendor/vscode-languageserver-node/protocol/src/common/tsconfig.json vendor/vscode-languageserver-node/protocol/src/common/api.ts --json src/protocol_schema.json --emit docs
 
 # Translate schema to Zig
-zig build run
+node src/index.js
 
 ## Format so it looks good
 zig fmt lsp.zig
@@ -23,7 +25,4 @@ zig fmt lsp.zig
 
 ## Dumpy
 
-https://github.com/YousefED/typescript-json-schema
 https://github.com/microsoft/vscode-languageserver-node/blob/main/protocol/src/common/protocol.ts
-
-TODO: Translate jsonrpc

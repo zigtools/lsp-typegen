@@ -1,0 +1,23 @@
+{
+  "name": "lspoop",
+  "description": "Crappy LSP spec-based Zig struct generator. It \"works.\"",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zigtools/lspoop.git"
+  },
+  "author": "Auguste Rame",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/zigtools/lspoop/issues"
+  },
+  "homepage": "https://github.com/zigtools/lspoop#readme",
+  "dependencies": {
+    "typedoc": "^0.22.10"
+  }
+}

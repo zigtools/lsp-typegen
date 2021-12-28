@@ -12,6 +12,10 @@ function wrapName(name) {
     return name;
 }
 
+function isFunctionNamespace(child) {
+    return child.children.reduce((prev, curr) => prev || (curr.kindString === "Function"), false);
+}
+
 function locateId(schema, id) {
     for (const child of schema.children) {
         if (child.id === id) return child;
@@ -150,14 +154,21 @@ function emitChild(schema, child) {
         case "Property":
             if (child.type.type === "reflection") return;
             emitComment(child);
-            outStream.write(`${wrapName(child.name)}: `);
-            emitType(child.type);
-            outStream.write(",\n");
+            if (child.type.type === "literal") {
+                outStream.write(`comptime ${wrapName(child.name)}: ${translateType(typeof child.type.value)} = ${JSON.stringify(child.type.value)},\n`);
+            } else {
+                outStream.write(`${wrapName(child.name)}: `);
+                emitType(child.type);
+                outStream.write(",\n");
+            }
             break;
 
         case "Type alias":
             if (child.type.type === "reflection") return;
-            if (schema.children.reduce((prev, curr) => prev || (curr.kindString !== "Type alias" && curr.kindString !== "Namespace" && curr.name === child.name), false)) break;
+            // if (schema.children.reduce((prev, curr) => prev || (curr.kindString !== "Type alias" && curr.name === child.name), false)) break;
+            if (schema.children.reduce((prev, curr) => prev || (curr.kindString === "Namespace" && curr.name === child.name && !isFunctionNamespace(curr)), false)) break;
+
+            // console.log()
 
             emitComment(child);
             outStream.write(`const ${wrapName(child.name)} = `);
@@ -175,7 +186,7 @@ function emitChild(schema, child) {
             break;
 
         case "Namespace":
-            if (child.children.reduce((prev, curr) => prev || (curr.kindString === "Function"), false)) {
+            if (isFunctionNamespace(child)) {
                 break;
             }
 
@@ -183,7 +194,7 @@ function emitChild(schema, child) {
 
             if (child.children.reduce((prev, curr) => prev || (curr.type.type === "literal" && typeof curr.type.value === "number"), false)) {
                 emitComment(child);
-                outStream.write(`const ${wrapName(child.name)} = enum {`);
+                outStream.write(`const ${wrapName(child.name)} = enum(i64) {`);
                 if (child.children)
                     for (const cc of child.children) outStream.write(`${wrapName(cc.name)} = ${cc.defaultValue},`);
                 outStream.write(`\n\n
@@ -239,13 +250,21 @@ function emitChild(schema, child) {
 
 let JOE = new Set();
 
+function isModuleSource(sources) {
+    return sources && sources.find(_ => _.fileName.indexOf("typescript") !== -1) !== undefined;
+}
+
 outStream.write(base);
 for (const child of typeSchema.children) {
     JOE.add(child.name);
-    if (child.name === "integer" || child.name === "uinteger" || child.name === "decimal" || child.name.startsWith("LSP")) continue;
+    if (child.name === "integer" || child.name === "uinteger" || child.name === "decimal" || child.name.startsWith("LSP") || child.name.startsWith("_") || isModuleSource(child.sources)) continue;
     emitChild(typeSchema, child);
 }
+for (const child of protocolSchema.children.find(_ => _.name === "<internal>").children) {
+    if (JOE.has(child.name) || child.name.startsWith("_") || isModuleSource(child.sources)) continue;
+    emitChild(protocolSchema, child);
+}
 for (const child of protocolSchema.children) {
-    if (JOE.has(child.name)) continue;
+    if (JOE.has(child.name) || child.name.startsWith("_") || isModuleSource(child.sources)) continue;
     emitChild(protocolSchema, child);
 }

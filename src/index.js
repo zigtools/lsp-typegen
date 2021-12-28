@@ -12,6 +12,13 @@ function wrapName(name) {
     return name;
 }
 
+/**
+ * Fixes that shitty typedoc alphabetical ordering (I love u typedoc but like why 😭😭)
+ */
+function sortChildren(children) {
+    return children.sort((a, b) => a.id - b.id);
+}
+
 function isFunctionNamespace(child) {
     return child.children.reduce((prev, curr) => prev || (curr.kindString === "Function"), false);
 }
@@ -33,7 +40,6 @@ function locateName(schema, name) {
         if (child.name === name) return child;
     }
 
-    console.log(name);
     throw new Error("BRUH");
 }
 
@@ -49,10 +55,12 @@ function translateType(type) {
     if (type === "string") return "[]const u8";
     if (type === "number") return "i64";
     if (type === "boolean") return "bool";
+    if (type === "object") return "ManuallyTranslateValue";
+    if (type === "any" || type === "unknown") return "std.json.Value";
     return type;
 }
 
-function emitType(type) {
+function emitType(schema, type) {
     switch (type.type) {
         case "intrinsic":
             outStream.write(translateType(type.name));
@@ -64,7 +72,7 @@ function emitType(type) {
 
         case "array":
             outStream.write("[]");
-            emitType(type.elementType);
+            emitType(schema, type.elementType);
             break;
 
         case "literal":
@@ -76,12 +84,12 @@ function emitType(type) {
             // if (type.types[0].type === "literal") {
                 outStream.write("enum {");
                 for (const child of type.types) {
-                    if (child.type === "reflection") continue;
-                    emitType(child);
+                    // if (child.type === "reflection") continue;
+                    emitType(schema, child);
                     outStream.write(",\n");
                 }
                 outStream.write(`\n\n
-        usingnamespace IntBackedEnumStringify(@This());
+        usingnamespace StringBackedEnumStringify(@This());
         `);
             } else {
                 const n = type.types.reduce((prev, curr) => prev || (curr.value === null), false);
@@ -89,14 +97,14 @@ function emitType(type) {
                     outStream.write("?");
                     
                 if (n && type.types.length === 2) {
-                    emitType(type.types.find(_ => _.value !== null));
+                    emitType(schema, type.types.find(_ => _.value !== null));
                     break;
                 } else {
                     outStream.write("union(enum) {");
                     for (const child of type.types) {
-                        if (child.type === "reflection" || child.value === null) continue;
+                        if (child.value === null) continue;
                         outStream.write(`${wrapName(child.name || child.type)}: `);
-                        emitType(child);
+                        emitType(schema, child);
                         outStream.write(",\n");
                     }
                 }
@@ -107,7 +115,7 @@ function emitType(type) {
         case "tuple":
             outStream.write("Tuple(&[_]type {");
             for (const child of type.elements) {
-                emitType(child);
+                emitType(schema, child);
                 outStream.write(",")
             }
             outStream.write("})");
@@ -116,16 +124,28 @@ function emitType(type) {
         case "intersection":
             outStream.write("struct {");
             for (const c of type.types) {
-                let z = locateName(protocolSchema, c.name);
-                // console.log(locateName(c.name));
-                for (const zz of z.children)
-                    emitChild(protocolSchema, zz);
+                if (c.type === "reference") {
+                    let z = locateName(protocolSchema, c.name);
+                    // console.log(locateName(c.name));
+                    for (const zz of sortChildren(z.children))
+                        emitChild(protocolSchema, zz);
+                } else {
+                    console.log("AAA", c.type);
+                }
             }
             outStream.write("}");
             break;
 
         case "query":
             outStream.write("QUERY");
+            break;
+
+        case "reflection":
+            if (type.declaration) {
+                emitChild(schema, type.declaration);
+            } else {
+                throw new Error("BRUH!!!");
+            }
             break;
     
         default:
@@ -147,18 +167,20 @@ function emitChild(schema, child) {
             emitComment(child);
             outStream.write(`const ${wrapName(child.name)} = struct {`);
             if (child.children)
-                for (const cc of child.children) emitChild(schema, cc);
+                for (const cc of sortChildren(child.children)) emitChild(schema, cc);
             outStream.write(`};\n`);
             break;
 
         case "Property":
-            if (child.type.type === "reflection") return;
+            // if (child.type.type === "reflection" && child.type.declaration.name !== "__type") return;
             emitComment(child);
             if (child.type.type === "literal") {
                 outStream.write(`comptime ${wrapName(child.name)}: ${translateType(typeof child.type.value)} = ${JSON.stringify(child.type.value)},\n`);
             } else {
                 outStream.write(`${wrapName(child.name)}: `);
-                emitType(child.type);
+                if (child.flags.isOptional) outStream.write("Undefinedable(");
+                emitType(schema, child.type);
+                if (child.flags.isOptional) outStream.write(")");
                 outStream.write(",\n");
             }
             break;
@@ -172,8 +194,20 @@ function emitChild(schema, child) {
 
             emitComment(child);
             outStream.write(`const ${wrapName(child.name)} = `);
-            emitType(child.type);
+            emitType(schema, child.type);
             outStream.write(";\n");
+            break;
+
+        case "Type literal":
+            if (child.children) {
+                outStream.write(`struct {`);
+                for (const c of child.children)
+                    emitChild(schema, c);
+                outStream.write("}");
+            } else {
+                outStream.write("ManuallyTranslateValue");
+                // console.log("BRUH TLs suck butt", child);
+            }
             break;
 
         case "Method":
@@ -195,7 +229,7 @@ function emitChild(schema, child) {
             if (child.children.reduce((prev, curr) => prev || (curr.type.type === "literal" && typeof curr.type.value === "number"), false)) {
                 emitComment(child);
                 outStream.write(`const ${wrapName(child.name)} = enum(i64) {`);
-                if (child.children)
+                if (sortChildren(child.children))
                     for (const cc of child.children) outStream.write(`${wrapName(cc.name)} = ${cc.defaultValue},`);
                 outStream.write(`\n\n
         usingnamespace IntBackedEnumStringify(@This());
@@ -204,7 +238,7 @@ function emitChild(schema, child) {
                 emitComment(child);
                 outStream.write(`const ${wrapName(child.name)} = struct {`);
                 if (child.children)
-                    for (const cc of child.children) emitChild(schema, cc);
+                    for (const cc of sortChildren(child.children)) emitChild(schema, cc);
             }
             outStream.write(`};\n`);
 
@@ -225,7 +259,7 @@ function emitChild(schema, child) {
                     outStream.write(child.defaultValue);
                 }
             } else {
-                emitType(child.type);
+                emitType(schema, child.type);
             }
             outStream.write(";");
             break;
@@ -254,17 +288,32 @@ function isModuleSource(sources) {
     return sources && sources.find(_ => _.fileName.indexOf("typescript") !== -1) !== undefined;
 }
 
+/**
+ * Damn nasty root types!! We don't want these!
+ */
+const NUKE = [/MessageSignature/, /HandlerResult/, /integer/, /decimal/, /LSP.+/, /_.*/];
+
 outStream.write(base);
-for (const child of typeSchema.children) {
+for (const child of sortChildren(typeSchema.children)) {
     JOE.add(child.name);
-    if (child.name === "integer" || child.name === "uinteger" || child.name === "decimal" || child.name.startsWith("LSP") || child.name.startsWith("_") || isModuleSource(child.sources)) continue;
+    if (NUKE.reduce((prev, curr) => prev || curr.test(child.name), false) || isModuleSource(child.sources)) continue;
     emitChild(typeSchema, child);
 }
-for (const child of protocolSchema.children.find(_ => _.name === "<internal>").children) {
-    if (JOE.has(child.name) || child.name.startsWith("_") || isModuleSource(child.sources)) continue;
+for (const child of sortChildren(protocolSchema.children.find(_ => _.name === "<internal>").children)) {
+    if (JOE.has(child.name) || NUKE.reduce((prev, curr) => prev || curr.test(child.name), false) || isModuleSource(child.sources)) continue;
     emitChild(protocolSchema, child);
 }
-for (const child of protocolSchema.children) {
-    if (JOE.has(child.name) || child.name.startsWith("_") || isModuleSource(child.sources)) continue;
+for (const child of sortChildren(protocolSchema.children)) {
+    if (JOE.has(child.name) || NUKE.reduce((prev, curr) => prev || curr.test(child.name), false) || isModuleSource(child.sources)) continue;
     emitChild(protocolSchema, child);
 }
+
+outStream.close(() => {
+    console.log("File generated!");
+
+    var l = require("child_process").spawn("zig", ["fmt", "lsp.zig"]);
+    l.on("exit", () => {
+        console.log("File formatted!");
+    });
+});
+// console.log(l.toString());

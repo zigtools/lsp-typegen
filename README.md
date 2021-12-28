@@ -8,6 +8,7 @@ Crappy LSP spec-based Zig struct generator. It "works."
 # Clone typedefs
 git clone https://github.com/microsoft/vscode-languageserver-node vendor/vscode-languageserver-node
 cd vendor/vscode-languageserver-node
+git checkout tags/release/protocol/3.16.0
 npm install
 cd ../..
 

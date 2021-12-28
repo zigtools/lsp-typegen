@@ -1,3 +1,0 @@
-[submodule "vendor/vscode-languageserver-node"]
-	path = vendor/vscode-languageserver-node
-	url = https://github.com/microsoft/vscode-languageserver-node

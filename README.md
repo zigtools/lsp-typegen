@@ -5,16 +5,20 @@ Crappy LSP spec-based Zig struct generator. It "works."
 ## Usage Instructions
 
 ```bash
-# Install submodules
-git submodule update --init --recursive
+# Clone typedefs
+git clone https://github.com/microsoft/vscode-languageserver-node vendor/vscode-languageserver-node
+cd vendor/vscode-languageserver-node
+npm install
+cd ../..
 
-# Install TSJSONSchema
+# Install Typedoc
 npm install typedoc --save-dev
+npm install typedoc-plugin-missing-exports --save-dev
 
 # Generate schemas
 npx typedoc --tsconfig vendor/vscode-languageserver-node/types/src/tsconfig.json vendor/vscode-languageserver-node/types/src/main.ts --json src/types_schema.json --emit docs
 
-npx typedoc --tsconfig vendor/vscode-languageserver-node/protocol/src/common/tsconfig.json vendor/vscode-languageserver-node/protocol/src/common/api.ts --json src/protocol_schema.json --emit docs
+npx typedoc --tsconfig vendor/vscode-languageserver-node/protocol/src/common/tsconfig.json vendor/vscode-languageserver-node/protocol/src/common/protocol.ts --json src/protocol_schema.json --emit docs
 
 # Translate schema to Zig
 node src/index.js

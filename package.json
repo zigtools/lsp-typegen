@@ -3,7 +3,10 @@
   "description": "Crappy LSP spec-based Zig struct generator. It \"works.\"",
   "version": "1.0.0",
   "main": "src/index.js",
-  "devDependencies": {},
+  "devDependencies": {
+    "typedoc": "^0.22.10",
+    "typedoc-plugin-missing-exports": "^0.22.6"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -16,8 +19,5 @@
   "bugs": {
     "url": "https://github.com/zigtools/lspoop/issues"
   },
-  "homepage": "https://github.com/zigtools/lspoop#readme",
-  "dependencies": {
-    "typedoc": "^0.22.10"
-  }
+  "homepage": "https://github.com/zigtools/lspoop#readme"
 }

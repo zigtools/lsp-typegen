@@ -1,5 +1,6 @@
 const std = @import("std");
 const json = std.json;
+const Tuple = std.meta.Tuple;
 
 pub fn IntBackedEnumStringify(comptime T: type) type {
     return struct {
@@ -26,19 +27,6 @@ test "int-backed enum stringify" {
     try json.stringify(MyEnum.two, .{}, fbs.writer());
     try std.testing.expectEqual(@as(u8, '2'), buf[1]);
 }
-
-/// MIN_VALUE = -2147483648
-/// MAX_VALUE = 2147483647
-const integer = i32;
-/// MIN_VALUE = 0
-/// MAX_VALUE = 2147483647
-const uinteger = u32;
-/// Defines a decimal number. Since decimal numbers are very
-/// rare in the language server specification we denote the
-/// exact range with every decimal using the mathematics
-/// interval notations (e.g. [0, 1] denotes all decimals d with
-/// 0 <= d <= 1.
-const decimal = f32;
 
 /// The LSP any type
 const LSPAny = std.json.Value;

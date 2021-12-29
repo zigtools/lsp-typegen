@@ -3,6 +3,16 @@ const typedoc = require("typedoc");
 
 const utils = require("./utils");
 
+class Context {
+    constructor() {
+        /**
+         * Map of generics and their potential default value (which will be substituted in)
+         * @type {Map<string, any>}
+         */
+        this.generics = new Map();
+    }  
+};
+
 module.exports = class TypeEmitter {
     /**
      * Create an LSPooper (more technically a `TypeEmitter`)
@@ -67,6 +77,14 @@ module.exports = class TypeEmitter {
                 var reference = type;
 
                 this.writeStream.write(utils.wrapName(utils.translateType(reference.name)));
+                if (reference.typeArguments) {
+                    this.writeStream.write("(");
+                    for (const ta of reference.typeArguments) {
+                        this.emitType(ta);
+                        this.writeStream.write(",");
+                    }
+                    this.writeStream.write(")");
+                }
                 break;
     
             case "array":
@@ -188,7 +206,7 @@ module.exports = class TypeEmitter {
     /**
      * 
      * @param {typedoc.JSONOutput.Reflection} child 
-     * @returns 
+     * @returns {void}
      */
     emitChild(child) {
         if (child.name === "<internal>") return;
@@ -261,8 +279,28 @@ module.exports = class TypeEmitter {
                 if (utils.isFunctionNamespace(child)) {
                     break;
                 }
+
+                if (child.name.endsWith("Request") || child.name.endsWith("Notification")) {
+                    this.emitComment(child);
+                    this.writeStream.write(`pub const ${utils.wrapName(child.name)} = struct {`);
+
+                    const typeSource = child.children.find(_ => _.name === "type").sources[0];
+                    const typeLine = fs.readFileSync(typeSource.fileName).toString().split("\n")[typeSource.line - 1];
+
+                    const methodEntry = child.children.find(_ => _.name === "method");
+                    if (methodEntry) {
+                        this.writeStream.write(`comptime method: []const u8 = "${methodEntry.type.value || methodEntry.defaultValue}",\n`);
+                    } else {
+                        this.writeStream.write(`comptime method: []const u8 = "${(/'(.+)'/.exec(typeLine)[1])}",\n`);
+                    }
+
+                    const paramMatch = /<(.+?)[,&]/.exec(typeLine);
+                    if (paramMatch && typeLine.indexOf("ProtocolRequestType0") === -1 && paramMatch[1] !== "void")
+                        this.writeStream.write(`params: ${paramMatch[1]},\n`);
+                    // break;
+                }
     
-                if (child.children.reduce((prev, curr) => prev || (curr.type.type === "literal" && typeof curr.type.value === "number"), false)) {
+                else if (child.children.reduce((prev, curr) => prev || (curr.type.type === "literal" && typeof curr.type.value === "number"), false)) {
                     this.emitComment(child);
                     this.writeStream.write(`pub const ${utils.wrapName(child.name)} = enum(i64) {`);
                     if (utils.sortChildren(child.children))
@@ -284,18 +322,25 @@ module.exports = class TypeEmitter {
                 this.emitComment(child);
                 this.writeStream.write(`pub const ${utils.wrapName(child.name)} = `);
     
-                if (child.defaultValue) {
-                    if (child.defaultValue.startsWith("'"))
-                        this.writeStream.write(`"${child.defaultValue.slice(1, -1)}"`);
-                    else if (!isNaN(parseFloat(child.defaultValue)))
-                        this.writeStream.write(child.defaultValue);
-                    else if (child.defaultValue === "...") {
-                        this.writeStream.write("ManuallyTranslateValue");
+                if (child.type.type === "literal") {
+                    if (child.defaultValue) {
+                        if (child.defaultValue.startsWith("'"))
+                            this.writeStream.write(`"${child.defaultValue.slice(1, -1)}"`);
+                        else if (!isNaN(parseFloat(child.defaultValue)))
+                            this.writeStream.write(child.defaultValue);
+                        else if (child.defaultValue === "...") {
+                            if (child.type.value !== undefined)
+                                this.writeStream.write(JSON.stringify(child.type.value));
+                            else this.writeStream.write("ManuallyTranslateValueDotDotDot");
+                        } else {
+                            this.writeStream.write(child.defaultValue);
+                        }
                     } else {
-                        this.writeStream.write(child.defaultValue);
+                        this.emitType(child.type);
                     }
                 } else {
                     this.emitType(child.type);
+                    // this.writeStream.write("ManuallyTranslateNotLit");
                 }
                 this.writeStream.write(";");
                 break;

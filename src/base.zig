@@ -69,3 +69,8 @@ const ManuallyTranslateValue = @compileError("bruh 😭");
 fn Undefinedable(comptime T: type) type {
     return T;
 }
+
+test {
+    // Test for general correctness of structs
+    std.testing.refAllDecls(@This());
+}

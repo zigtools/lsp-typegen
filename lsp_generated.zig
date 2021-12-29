@@ -70,6 +70,11 @@ fn Undefinedable(comptime T: type) type {
     return T;
 }
 
+test {
+    // Test for general correctness of structs
+    std.testing.refAllDecls(@This());
+}
+
 /// A tagging type for string properties that are actually document URIs.
 pub const DocumentUri = []const u8;
 
@@ -903,23 +908,23 @@ pub const DocumentSymbol = struct {
 /// A set of predefined code action kinds
 pub const CodeActionKind = struct {
     /// Empty kind.
-    pub const Empty = "";
+    pub const Empty = CodeActionKind;
     /// Base kind for quickfix actions: 'quickfix'
-    pub const QuickFix = "quickfix";
+    pub const QuickFix = CodeActionKind;
     /// Base kind for refactoring actions: 'refactor'
-    pub const Refactor = "refactor";
+    pub const Refactor = CodeActionKind;
     /// Base kind for refactoring extraction actions: 'refactor.extract'
-    pub const RefactorExtract = "refactor.extract";
+    pub const RefactorExtract = CodeActionKind;
     /// Base kind for refactoring inline actions: 'refactor.inline'
-    pub const RefactorInline = "refactor.inline";
+    pub const RefactorInline = CodeActionKind;
     /// Base kind for refactoring rewrite actions: 'refactor.rewrite'
-    pub const RefactorRewrite = "refactor.rewrite";
+    pub const RefactorRewrite = CodeActionKind;
     /// Base kind for source actions: `source`
-    pub const Source = "source";
+    pub const Source = CodeActionKind;
     /// Base kind for an organize imports source action: `source.organizeImports`
-    pub const SourceOrganizeImports = "source.organizeImports";
+    pub const SourceOrganizeImports = CodeActionKind;
     /// Base kind for auto-fix source actions: `source.fixAll`.
-    pub const SourceFixAll = "source.fixAll";
+    pub const SourceFixAll = CodeActionKind;
 };
 
 /// Contains additional diagnostic information about the context in which
@@ -1081,7 +1086,7 @@ pub const CallHierarchyOutgoingCall = struct {
     /// and not [`this.to`](#CallHierarchyOutgoingCall.to).
     fromRanges: []Range,
 };
-pub const EOL = ManuallyTranslateValue;
+pub const EOL = [][]const u8;
 /// A simple text document. Not to be implemented. The document keeps the content
 /// as string.
 pub const TextDocument = struct {
@@ -1177,15 +1182,6 @@ pub const DocumentColorClientCapabilities = struct {
     /// for the corresponding server capability as well.
     dynamicRegistration: Undefinedable(bool),
 };
-pub fn RequestHandler(comptime P: type, comptime R: type, comptime E: type) type {
-    return struct {};
-}
-pub fn RequestHandler0(comptime R: type, comptime E: type) type {
-    return struct {};
-}
-pub fn NotificationHandler(comptime P: type) type {
-    return struct {};
-}
 
 /// A filter to describe in which file operation requests or notifications
 /// the server is interested in.
@@ -1205,7 +1201,9 @@ pub const CancellationToken = struct {
     isCancellationRequested: bool,
 
     /// An [event](#Event) which fires upon cancellation.
-    onCancellationRequested: Event,
+    onCancellationRequested: Event(
+        std.json.Value,
+    ),
 };
 pub fn Thenable(comptime T: type) type {
     return struct {};
@@ -1317,7 +1315,8 @@ pub const RegistrationParams = struct {
 /// The `client/registerCapability` request is sent from the server to the client to register a new capability
 /// handler on the client side.
 pub const RegistrationRequest = struct {
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "client/registerCapability",
+    params: RegistrationParams,
 };
 
 /// General parameters to unregister a request or notification.
@@ -1336,7 +1335,8 @@ pub const UnregistrationParams = struct {
 /// The `client/unregisterCapability` request is sent from the server to the client to unregister a previously registered capability
 /// handler on the client side.
 pub const UnregistrationRequest = struct {
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "client/unregisterCapability",
+    params: UnregistrationParams,
 };
 pub const WorkDoneProgressParams = struct {
     /// An optional token that a server can use to report work done progress.
@@ -1359,26 +1359,26 @@ pub const TextDocumentPositionParams = struct {
 };
 pub const ResourceOperationKind = struct {
     /// Supports creating new files and folders.
-    pub const Create = "create";
+    pub const Create = ResourceOperationKind;
     /// Supports renaming existing files and folders.
-    pub const Rename = "rename";
+    pub const Rename = ResourceOperationKind;
     /// Supports deleting existing files and folders.
-    pub const Delete = "delete";
+    pub const Delete = ResourceOperationKind;
 };
 pub const FailureHandlingKind = struct {
     /// Applying the workspace change is simply aborted if one of the changes provided
     /// fails. All operations executed before the failing operation stay executed.
-    pub const Abort = "abort";
+    pub const Abort = FailureHandlingKind;
     /// All operations are executed transactional. That means they either all
     /// succeed or no changes at all are applied to the workspace.
-    pub const Transactional = "transactional";
+    pub const Transactional = FailureHandlingKind;
     /// If the workspace edit contains only textual file changes they are executed transactional.
     /// If resource changes (create, rename or delete file) are part of the change the failure
     /// handling strategy is abort.
-    pub const TextOnlyTransactional = "textOnlyTransactional";
+    pub const TextOnlyTransactional = FailureHandlingKind;
     /// The client tries to undo the operations already executed. But there is no
     /// guarantee that this is succeeding.
-    pub const Undo = "undo";
+    pub const Undo = FailureHandlingKind;
 };
 
 /// Workspace specific client capabilities.
@@ -1783,7 +1783,8 @@ pub const ServerCapabilities = struct {
 /// the response if of type [InitializeResult](#InitializeResult) of a Thenable that
 /// resolves to such.
 pub const InitializeRequest = struct {
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "initialize",
+    params: InitializeParams,
 };
 pub const InitializeParams = struct {
     /// The process Id of the parent process that started
@@ -1839,7 +1840,9 @@ pub const InitializeParams = struct {
 pub fn InitializeResult(comptime T: type) type {
     return struct {
         /// The capabilities the language server provides.
-        capabilities: ServerCapabilities,
+        capabilities: ServerCapabilities(
+            T,
+        ),
 
         /// Information about the server.
         serverInfo: Undefinedable(struct {
@@ -1874,7 +1877,8 @@ pub const InitializedParams = struct {};
 /// server after the client is fully initialized and the server
 /// is allowed to send requests from the server to the client.
 pub const InitializedNotification = struct {
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "initialized",
+    params: InitializedParams,
 };
 
 /// A shutdown request is sent from the client to the server.
@@ -1882,13 +1886,13 @@ pub const InitializedNotification = struct {
 /// server. The only notification that is sent after a shutdown request
 /// is the exit event.
 pub const ShutdownRequest = struct {
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "shutdown",
 };
 
 /// The exit event is sent from the client to the server to
 /// ask the server to exit its process.
 pub const ExitNotification = struct {
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "exit",
 };
 pub const DidChangeConfigurationClientCapabilities = struct {
     /// Did change configuration notification supports dynamic registration.
@@ -1899,7 +1903,8 @@ pub const DidChangeConfigurationClientCapabilities = struct {
 /// when the client's configuration has changed. The notification contains
 /// the changed configuration as defined by the language client.
 pub const DidChangeConfigurationNotification = struct {
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "workspace/didChangeConfiguration",
+    params: DidChangeConfigurationParams,
 };
 pub const DidChangeConfigurationRegistrationOptions = struct {
     section: Undefinedable(union(enum) {
@@ -1936,7 +1941,8 @@ pub const ShowMessageParams = struct {
 /// The show message notification is sent from a server to a client to ask
 /// the client to display a particular message in the user interface.
 pub const ShowMessageNotification = struct {
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "window/showMessage",
+    params: ShowMessageParams,
 };
 
 /// Show message request client capabilities
@@ -1967,13 +1973,15 @@ pub const ShowMessageRequestParams = struct {
 /// The show message request is sent from the server to the client to show a message
 /// and a set of options actions to the user.
 pub const ShowMessageRequest = struct {
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "window/showMessageRequest",
+    params: ShowMessageRequestParams,
 };
 
 /// The log message notification is sent from the server to the client to ask
 /// the client to log a particular message.
 pub const LogMessageNotification = struct {
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "window/logMessage",
+    params: LogMessageParams,
 };
 
 /// The log message parameters.
@@ -1988,7 +1996,8 @@ pub const LogMessageParams = struct {
 /// The telemetry event notification is sent from the server to the client to ask
 /// the client to log telemetry data.
 pub const TelemetryEventNotification = struct {
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "telemetry/event",
+    params: any,
 };
 pub const TextDocumentSyncClientCapabilities = struct {
     /// Whether text document synchronization supports dynamic registration.
@@ -2055,8 +2064,8 @@ pub const DidOpenTextDocumentParams = struct {
 /// This means open and close notification must be balanced and the max open count
 /// is one.
 pub const DidOpenTextDocumentNotification = struct {
-    pub const method = "textDocument/didOpen";
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "textDocument/didOpen",
+    params: DidOpenTextDocumentParams,
 };
 
 /// An event describing a change to a text document. If range and rangeLength are omitted
@@ -2106,8 +2115,8 @@ pub const TextDocumentChangeRegistrationOptions = struct {
 /// The document change notification is sent from the client to the server to signal
 /// changes to a text document.
 pub const DidChangeTextDocumentNotification = struct {
-    pub const method = "textDocument/didChange";
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "textDocument/didChange",
+    params: DidChangeTextDocumentParams,
 };
 
 /// The parameters send in a close text document notification
@@ -2124,8 +2133,8 @@ pub const DidCloseTextDocumentParams = struct {
 /// doesn't mean that the document was open in an editor before. A close
 /// notification requires a previous open notification to be sent.
 pub const DidCloseTextDocumentNotification = struct {
-    pub const method = "textDocument/didClose";
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "textDocument/didClose",
+    params: DidCloseTextDocumentParams,
 };
 
 /// The parameters send in a save text document notification
@@ -2151,8 +2160,8 @@ pub const TextDocumentSaveRegistrationOptions = struct {
 /// The document save notification is sent from the client to the server when
 /// the document got saved in the client.
 pub const DidSaveTextDocumentNotification = struct {
-    pub const method = "textDocument/didSave";
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "textDocument/didSave",
+    params: DidSaveTextDocumentParams,
 };
 
 /// Represents reasons why a text document is saved.
@@ -2176,8 +2185,8 @@ pub const WillSaveTextDocumentParams = struct {
 /// A document will save notification is sent from the client to the server before
 /// the document is actually saved.
 pub const WillSaveTextDocumentNotification = struct {
-    pub const method = "textDocument/willSave";
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "textDocument/willSave",
+    params: WillSaveTextDocumentParams,
 };
 
 /// A document will save request is sent from the client to the server before
@@ -2187,8 +2196,8 @@ pub const WillSaveTextDocumentNotification = struct {
 /// server constantly fails on this request. This is done to keep the save fast and
 /// reliable.
 pub const WillSaveTextDocumentWaitUntilRequest = struct {
-    pub const method = "textDocument/willSaveWaitUntil";
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "textDocument/willSaveWaitUntil",
+    params: WillSaveTextDocumentParams,
 };
 pub const DidChangeWatchedFilesClientCapabilities = struct {
     /// Did change watched files notification supports dynamic registration. Please note
@@ -2200,7 +2209,8 @@ pub const DidChangeWatchedFilesClientCapabilities = struct {
 /// The watched files notification is sent from the client to the server when
 /// the client detects changes to file watched by the language client.
 pub const DidChangeWatchedFilesNotification = struct {
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "workspace/didChangeWatchedFiles",
+    params: DidChangeWatchedFilesParams,
 };
 
 /// The watched files change notification's parameters.
@@ -2295,7 +2305,8 @@ pub const PublishDiagnosticsParams = struct {
 /// Diagnostics notification are sent from the server to the client to signal
 /// results of validation runs.
 pub const PublishDiagnosticsNotification = struct {
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "textDocument/publishDiagnostics",
+    params: PublishDiagnosticsParams,
 };
 
 /// Completion client capabilities
@@ -2456,16 +2467,16 @@ pub const CompletionRegistrationOptions = struct {
 /// is of type [CompletionItem[]](#CompletionItem) or [CompletionList](#CompletionList)
 /// or a Thenable that resolves to such.
 pub const CompletionRequest = struct {
-    pub const method = "textDocument/completion";
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "textDocument/completion",
+    params: CompletionParams,
 };
 
 /// Request to resolve additional information for a given completion item.The request's
 /// parameter is of type [CompletionItem](#CompletionItem) the response
 /// is of type [CompletionItem](#CompletionItem) or a Thenable that resolves to such.
 pub const CompletionResolveRequest = struct {
-    pub const method = "completionItem/resolve";
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "completionItem/resolve",
+    params: CompletionItem,
 };
 pub const HoverClientCapabilities = struct {
     /// Whether hover supports dynamic registration.
@@ -2505,8 +2516,8 @@ pub const HoverRegistrationOptions = struct {
 /// parameter is of type [TextDocumentPosition](#TextDocumentPosition) the response is of
 /// type [Hover](#Hover) or a Thenable that resolves to such.
 pub const HoverRequest = struct {
-    pub const method = "textDocument/hover";
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "textDocument/hover",
+    params: HoverParams,
 };
 
 /// Client Capabilities for a [SignatureHelpRequest](#SignatureHelpRequest).
@@ -2604,8 +2615,8 @@ pub const SignatureHelpRegistrationOptions = struct {
     workDoneProgress: Undefinedable(bool),
 };
 pub const SignatureHelpRequest = struct {
-    pub const method = "textDocument/signatureHelp";
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "textDocument/signatureHelp",
+    params: SignatureHelpParams,
 };
 
 /// Client Capabilities for a [DefinitionRequest](#DefinitionRequest).
@@ -2652,8 +2663,8 @@ pub const DefinitionRegistrationOptions = struct {
 /// or a typed array of [DefinitionLink](#DefinitionLink) or a Thenable that resolves
 /// to such.
 pub const DefinitionRequest = struct {
-    pub const method = "textDocument/definition";
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "textDocument/definition",
+    params: DefinitionParams,
 };
 
 /// Client Capabilities for a [ReferencesRequest](#ReferencesRequest).
@@ -2698,8 +2709,8 @@ pub const ReferenceRegistrationOptions = struct {
 /// type [ReferenceParams](#ReferenceParams) the response is of type
 /// [Location[]](#Location) or a Thenable that resolves to such.
 pub const ReferencesRequest = struct {
-    pub const method = "textDocument/references";
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "textDocument/references",
+    params: ReferenceParams,
 };
 
 /// Client Capabilities for a [DocumentHighlightRequest](#DocumentHighlightRequest).
@@ -2742,8 +2753,8 @@ pub const DocumentHighlightRegistrationOptions = struct {
 /// (#TextDocumentPosition) the request response is of type [DocumentHighlight[]]
 /// (#DocumentHighlight) or a Thenable that resolves to such.
 pub const DocumentHighlightRequest = struct {
-    pub const method = "textDocument/documentHighlight";
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "textDocument/documentHighlight",
+    params: DocumentHighlightParams,
 };
 
 /// Client Capabilities for a [DocumentSymbolRequest](#DocumentSymbolRequest).
@@ -2814,8 +2825,8 @@ pub const DocumentSymbolRegistrationOptions = struct {
 /// response is of type [SymbolInformation[]](#SymbolInformation) or a Thenable
 /// that resolves to such.
 pub const DocumentSymbolRequest = struct {
-    pub const method = "textDocument/documentSymbol";
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "textDocument/documentSymbol",
+    params: DocumentSymbolParams,
 };
 
 /// The Client Capabilities of a [CodeActionRequest](#CodeActionRequest).
@@ -2911,16 +2922,16 @@ pub const CodeActionRegistrationOptions = struct {
 
 /// A request to provide commands for the given text document and range.
 pub const CodeActionRequest = struct {
-    pub const method = "textDocument/codeAction";
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "textDocument/codeAction",
+    params: CodeActionParams,
 };
 
 /// Request to resolve additional information for a given code action.The request's
 /// parameter is of type [CodeAction](#CodeAction) the response
 /// is of type [CodeAction](#CodeAction) or a Thenable that resolves to such.
 pub const CodeActionResolveRequest = struct {
-    pub const method = "codeAction/resolve";
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "codeAction/resolve",
+    params: CodeAction,
 };
 
 /// Client capabilities for a [WorkspaceSymbolRequest](#WorkspaceSymbolRequest).
@@ -2974,8 +2985,8 @@ pub const WorkspaceSymbolRegistrationOptions = struct {
 /// of type [SymbolInformation[]](#SymbolInformation) or a Thenable that
 /// resolves to such.
 pub const WorkspaceSymbolRequest = struct {
-    pub const method = "workspace/symbol";
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "workspace/symbol",
+    params: WorkspaceSymbolParams,
 };
 
 /// The client capabilities  of a [CodeLensRequest](#CodeLensRequest).
@@ -3022,20 +3033,19 @@ pub const CodeLensRegistrationOptions = struct {
 
 /// A request to provide code lens for the given text document.
 pub const CodeLensRequest = struct {
-    pub const method = "textDocument/codeLens";
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "textDocument/codeLens",
+    params: CodeLensParams,
 };
 
 /// A request to resolve a command for a given code lens.
 pub const CodeLensResolveRequest = struct {
-    pub const method = "codeLens/resolve";
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "codeLens/resolve",
+    params: CodeLens,
 };
 
 /// A request to refresh all code actions
 pub const CodeLensRefreshRequest = struct {
-    pub const method = ManuallyTranslateValue;
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "workspace/codeLens/refresh",
 };
 
 /// The client capabilities of a [DocumentLinkRequest](#DocumentLinkRequest).
@@ -3080,16 +3090,16 @@ pub const DocumentLinkRegistrationOptions = struct {
 
 /// A request to provide document links
 pub const DocumentLinkRequest = struct {
-    pub const method = "textDocument/documentLink";
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "textDocument/documentLink",
+    params: DocumentLinkParams,
 };
 
 /// Request to resolve additional information for a given document link. The request's
 /// parameter is of type [DocumentLink](#DocumentLink) the response
 /// is of type [DocumentLink](#DocumentLink) or a Thenable that resolves to such.
 pub const DocumentLinkResolveRequest = struct {
-    pub const method = "documentLink/resolve";
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "documentLink/resolve",
+    params: DocumentLink,
 };
 
 /// Client capabilities of a [DocumentFormattingRequest](#DocumentFormattingRequest).
@@ -3125,8 +3135,8 @@ pub const DocumentFormattingRegistrationOptions = struct {
 
 /// A request to to format a whole document.
 pub const DocumentFormattingRequest = struct {
-    pub const method = "textDocument/formatting";
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "textDocument/formatting",
+    params: DocumentFormattingParams,
 };
 
 /// Client capabilities of a [DocumentRangeFormattingRequest](#DocumentRangeFormattingRequest).
@@ -3165,8 +3175,8 @@ pub const DocumentRangeFormattingRegistrationOptions = struct {
 
 /// A request to to format a range in a document.
 pub const DocumentRangeFormattingRequest = struct {
-    pub const method = "textDocument/rangeFormatting";
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "textDocument/rangeFormatting",
+    params: DocumentRangeFormattingParams,
 };
 
 /// Client capabilities of a [DocumentOnTypeFormattingRequest](#DocumentOnTypeFormattingRequest).
@@ -3214,8 +3224,8 @@ pub const DocumentOnTypeFormattingRegistrationOptions = struct {
 
 /// A request to format a document on type.
 pub const DocumentOnTypeFormattingRequest = struct {
-    pub const method = "textDocument/onTypeFormatting";
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "textDocument/onTypeFormatting",
+    params: DocumentOnTypeFormattingParams,
 };
 pub const PrepareSupportDefaultBehavior = enum(i64) {
     Identifier = 1,
@@ -3278,8 +3288,8 @@ pub const RenameRegistrationOptions = struct {
 
 /// A request to rename a symbol.
 pub const RenameRequest = struct {
-    pub const method = "textDocument/rename";
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "textDocument/rename",
+    params: RenameParams,
 };
 pub const PrepareRenameParams = struct {
     /// The text document.
@@ -3294,8 +3304,8 @@ pub const PrepareRenameParams = struct {
 
 /// A request to test and perform the setup necessary for a rename.
 pub const PrepareRenameRequest = struct {
-    pub const method = "textDocument/prepareRename";
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "textDocument/prepareRename",
+    params: PrepareRenameParams,
 };
 
 /// The client capabilities of a [ExecuteCommandRequest](#ExecuteCommandRequest).
@@ -3333,7 +3343,8 @@ pub const ExecuteCommandRegistrationOptions = struct {
 /// A request send from the client to the server to execute a command. The request might return
 /// a workspace edit which the client will apply to the workspace.
 pub const ExecuteCommandRequest = struct {
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "workspace/executeCommand",
+    params: ExecuteCommandParams,
 };
 pub const WorkspaceEditClientCapabilities = struct {
     /// The client supports versioned document changes in `WorkspaceEdit`s
@@ -3393,7 +3404,8 @@ pub const ApplyWorkspaceEditResponse = struct {
 
 /// A request sent from the server to the client to modified certain resources.
 pub const ApplyWorkspaceEditRequest = struct {
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "workspace/applyEdit",
+    params: ApplyWorkspaceEditParams,
 };
 
 /// A request to resolve the implementation locations of a symbol at a given text
@@ -3401,9 +3413,8 @@ pub const ApplyWorkspaceEditRequest = struct {
 /// (#TextDocumentPositionParams) the response is of type [Definition](#Definition) or a
 /// Thenable that resolves to such.
 pub const ImplementationRequest = struct {
-    pub const method = "textDocument/implementation";
-    pub const @"type" = ManuallyTranslateValue;
-    pub const HandlerSignature = RequestHandler;
+    comptime method: []const u8 = "textDocument/implementation",
+    params: ImplementationParams,
 };
 pub const ImplementationParams = struct {
     /// The text document.
@@ -3438,9 +3449,8 @@ pub const ImplementationOptions = struct {
 /// (#TextDocumentPositionParams) the response is of type [Definition](#Definition) or a
 /// Thenable that resolves to such.
 pub const TypeDefinitionRequest = struct {
-    pub const method = "textDocument/typeDefinition";
-    pub const @"type" = ManuallyTranslateValue;
-    pub const HandlerSignature = RequestHandler;
+    comptime method: []const u8 = "textDocument/typeDefinition",
+    params: TypeDefinitionParams,
 };
 pub const TypeDefinitionParams = struct {
     /// The text document.
@@ -3472,15 +3482,14 @@ pub const TypeDefinitionOptions = struct {
 
 /// The `workspace/workspaceFolders` is sent from the server to the client to fetch the open workspace folders.
 pub const WorkspaceFoldersRequest = struct {
-    pub const @"type" = ManuallyTranslateValue;
-    pub const HandlerSignature = RequestHandler0;
+    comptime method: []const u8 = "workspace/workspaceFolders",
 };
 
 /// The `workspace/didChangeWorkspaceFolders` notification is sent from the client to the server when the workspace
 /// folder configuration changes.
 pub const DidChangeWorkspaceFoldersNotification = struct {
-    pub const @"type" = ManuallyTranslateValue;
-    pub const HandlerSignature = NotificationHandler;
+    comptime method: []const u8 = "workspace/didChangeWorkspaceFolders",
+    params: DidChangeWorkspaceFoldersParams,
 };
 
 /// The parameters of a `workspace/didChangeWorkspaceFolders` notification.
@@ -3509,8 +3518,8 @@ pub const WorkspaceFoldersChangeEvent = struct {
 /// The 'workspace/configuration' request is sent from the server to the client to fetch a certain
 /// configuration setting.
 pub const ConfigurationRequest = struct {
-    pub const @"type" = ManuallyTranslateValue;
-    pub const HandlerSignature = RequestHandler;
+    comptime method: []const u8 = "workspace/configuration",
+    params: ConfigurationParams,
 };
 
 /// The parameters of a configuration request.
@@ -3530,9 +3539,8 @@ pub const ConfigurationItem = struct {
 /// response is of type [ColorInformation[]](#ColorInformation) or a Thenable
 /// that resolves to such.
 pub const DocumentColorRequest = struct {
-    pub const method = "textDocument/documentColor";
-    pub const @"type" = ManuallyTranslateValue;
-    pub const HandlerSignature = RequestHandler;
+    comptime method: []const u8 = "textDocument/documentColor",
+    params: DocumentColorParams,
 };
 
 /// A request to list all presentation for a color. The request's
@@ -3540,8 +3548,8 @@ pub const DocumentColorRequest = struct {
 /// response is of type [ColorInformation[]](#ColorInformation) or a Thenable
 /// that resolves to such.
 pub const ColorPresentationRequest = struct {
-    pub const @"type" = ManuallyTranslateValue;
-    pub const HandlerSignature = RequestHandler;
+    comptime method: []const u8 = "textDocument/colorPresentation",
+    params: ColorPresentationParams,
 };
 pub const DocumentColorOptions = struct {
     workDoneProgress: Undefinedable(bool),
@@ -3611,9 +3619,8 @@ pub const FoldingRangeOptions = struct {
 /// response is of type [FoldingRangeList](#FoldingRangeList) or a Thenable
 /// that resolves to such.
 pub const FoldingRangeRequest = struct {
-    pub const method = "textDocument/foldingRange";
-    pub const @"type" = ManuallyTranslateValue;
-    pub const HandlerSignature = RequestHandler;
+    comptime method: []const u8 = "textDocument/foldingRange",
+    params: FoldingRangeParams,
 };
 
 /// Parameters for a [FoldingRangeRequest](#FoldingRangeRequest).
@@ -3654,9 +3661,8 @@ pub const DeclarationClientCapabilities = struct {
 /// or a typed array of [DeclarationLink](#DeclarationLink) or a Thenable that resolves
 /// to such.
 pub const DeclarationRequest = struct {
-    pub const method = "textDocument/declaration";
-    pub const @"type" = ManuallyTranslateValue;
-    pub const HandlerSignature = RequestHandler;
+    comptime method: []const u8 = "textDocument/declaration",
+    params: DeclarationParams,
 };
 pub const DeclarationParams = struct {
     /// The text document.
@@ -3717,9 +3723,8 @@ pub const SelectionRangeParams = struct {
 /// response is of type [SelectionRange[]](#SelectionRange[]) or a Thenable
 /// that resolves to such.
 pub const SelectionRangeRequest = struct {
-    pub const method = "textDocument/selectionRange";
-    pub const @"type" = ManuallyTranslateValue;
-    pub const HandlerSignature = RequestHandler;
+    comptime method: []const u8 = "textDocument/selectionRange",
+    params: SelectionRangeParams,
 };
 pub const SelectionRangeRegistrationOptions = struct {
     workDoneProgress: Undefinedable(bool),
@@ -3783,8 +3788,8 @@ pub const WorkDoneProgressCreateParams = struct {
 /// The `window/workDoneProgress/create` request is sent from the server to the client to initiate progress
 /// reporting from the server.
 pub const WorkDoneProgressCreateRequest = struct {
-    pub const @"type" = ManuallyTranslateValue;
-    pub const HandlerSignature = RequestHandler;
+    comptime method: []const u8 = "window/workDoneProgress/create",
+    params: WorkDoneProgressCreateParams,
 };
 pub const WorkDoneProgressCancelParams = struct {
     /// The token to be used to report progress.
@@ -3794,8 +3799,8 @@ pub const WorkDoneProgressCancelParams = struct {
 /// The `window/workDoneProgress/cancel` notification is sent from  the client to the server to cancel a progress
 /// initiated on the server side.
 pub const WorkDoneProgressCancelNotification = struct {
-    pub const @"type" = ManuallyTranslateValue;
-    pub const HandlerSignature = NotificationHandler;
+    comptime method: []const u8 = "window/workDoneProgress/cancel",
+    params: WorkDoneProgressCancelParams,
 };
 pub const CallHierarchyClientCapabilities = struct {
     /// Whether implementation supports dynamic registration. If this is set to `true`
@@ -3835,9 +3840,8 @@ pub const CallHierarchyIncomingCallsParams = struct {
 
 /// A request to resolve the incoming calls for a given `CallHierarchyItem`.
 pub const CallHierarchyIncomingCallsRequest = struct {
-    pub const method = "callHierarchy/incomingCalls";
-    pub const @"type" = ManuallyTranslateValue;
-    pub const HandlerSignature = RequestHandler;
+    comptime method: []const u8 = "callHierarchy/incomingCalls",
+    params: CallHierarchyIncomingCallsParams,
 };
 
 /// The parameter of a `callHierarchy/outgoingCalls` request.
@@ -3854,9 +3858,8 @@ pub const CallHierarchyOutgoingCallsParams = struct {
 
 /// A request to resolve the outgoing calls for a given `CallHierarchyItem`.
 pub const CallHierarchyOutgoingCallsRequest = struct {
-    pub const method = "callHierarchy/outgoingCalls";
-    pub const @"type" = ManuallyTranslateValue;
-    pub const HandlerSignature = RequestHandler;
+    comptime method: []const u8 = "callHierarchy/outgoingCalls",
+    params: CallHierarchyOutgoingCallsParams,
 };
 
 /// The parameter of a `textDocument/prepareCallHierarchy` request.
@@ -3874,9 +3877,8 @@ pub const CallHierarchyPrepareParams = struct {
 /// A request to result a `CallHierarchyItem` in a document at a given position.
 /// Can be used as an input to a incoming or outgoing call hierarchy.
 pub const CallHierarchyPrepareRequest = struct {
-    pub const method = "textDocument/prepareCallHierarchy";
-    pub const @"type" = ManuallyTranslateValue;
-    pub const HandlerSignature = RequestHandler;
+    comptime method: []const u8 = "textDocument/prepareCallHierarchy",
+    params: CallHierarchyPrepareParams,
 };
 
 /// A set of predefined token types. This set is not fixed
@@ -4074,9 +4076,8 @@ pub const SemanticTokensParams = struct {
     partialResultToken: Undefinedable(ProgressToken),
 };
 pub const SemanticTokensRequest = struct {
-    pub const method = "textDocument/semanticTokens/full";
-    pub const @"type" = ManuallyTranslateValue;
-    pub const HandlerSignature = RequestHandler;
+    comptime method: []const u8 = "textDocument/semanticTokens/full",
+    params: SemanticTokensParams,
 };
 pub const SemanticTokensDeltaParams = struct {
     /// The text document.
@@ -4094,9 +4095,8 @@ pub const SemanticTokensDeltaParams = struct {
     partialResultToken: Undefinedable(ProgressToken),
 };
 pub const SemanticTokensDeltaRequest = struct {
-    pub const method = "textDocument/semanticTokens/full/delta";
-    pub const @"type" = ManuallyTranslateValue;
-    pub const HandlerSignature = RequestHandler;
+    comptime method: []const u8 = "textDocument/semanticTokens/full/delta",
+    params: SemanticTokensDeltaParams,
 };
 pub const SemanticTokensRangeParams = struct {
     /// The text document.
@@ -4113,18 +4113,17 @@ pub const SemanticTokensRangeParams = struct {
     partialResultToken: Undefinedable(ProgressToken),
 };
 pub const SemanticTokensRangeRequest = struct {
-    pub const method = "textDocument/semanticTokens/range";
-    pub const @"type" = ManuallyTranslateValue;
-    pub const HandlerSignature = RequestHandler;
+    comptime method: []const u8 = "textDocument/semanticTokens/range",
+    params: SemanticTokensRangeParams,
 };
 pub const SemanticTokensRefreshRequest = struct {
-    pub const method = ManuallyTranslateValue;
-    pub const @"type" = ManuallyTranslateValue;
-    pub const HandlerSignature = RequestHandler0;
+    comptime method: []const u8 = "workspace/semanticTokens/refresh",
 };
 pub const SemanticTokensRegistrationType = struct {
     pub const method = "textDocument/semanticTokens";
-    pub const @"type" = ManuallyTranslateValue;
+    pub const @"type" = RegistrationType(
+        SemanticTokensRegistrationOptions,
+    );
 };
 
 /// Params to show a document.
@@ -4155,9 +4154,8 @@ pub const ShowDocumentParams = struct {
 /// For example a request to open `https://code.visualstudio.com/`
 /// will very likely open the URI in a WEB browser.
 pub const ShowDocumentRequest = struct {
-    pub const method = "window/showDocument";
-    pub const @"type" = ManuallyTranslateValue;
-    pub const HandlerSignature = RequestHandler;
+    comptime method: []const u8 = "window/showDocument",
+    params: ShowDocumentParams,
 };
 
 /// The result of an show document request.
@@ -4218,9 +4216,8 @@ pub const LinkedEditingRangeRegistrationOptions = struct {
 
 /// A request to provide ranges that can be edited together.
 pub const LinkedEditingRangeRequest = struct {
-    pub const method = "textDocument/linkedEditingRange";
-    pub const @"type" = ManuallyTranslateValue;
-    pub const HandlerSignature = RequestHandler;
+    comptime method: []const u8 = "textDocument/linkedEditingRange",
+    params: LinkedEditingRangeParams,
 };
 
 /// Options for notifications/requests for user operations on files.
@@ -4292,9 +4289,8 @@ pub const FileOperationPatternKind = struct {
 /// The did create files notification is sent from the client to the server when
 /// files were created from within the client.
 pub const DidCreateFilesNotification = struct {
-    pub const method = "workspace/didCreateFiles";
-    pub const @"type" = ManuallyTranslateValue;
-    pub const HandlerSignature = NotificationHandler;
+    comptime method: []const u8 = "workspace/didCreateFiles",
+    params: CreateFilesParams,
 };
 
 /// The parameters sent in file create requests/notifications.
@@ -4312,17 +4308,15 @@ pub const FileCreate = struct {
 /// The will create files request is sent from the client to the server before files are actually
 /// created as long as the creation is triggered from within the client.
 pub const WillCreateFilesRequest = struct {
-    pub const method = "workspace/willCreateFiles";
-    pub const @"type" = ManuallyTranslateValue;
-    pub const HandlerSignature = RequestHandler;
+    comptime method: []const u8 = "workspace/willCreateFiles",
+    params: CreateFilesParams,
 };
 
 /// The did rename files notification is sent from the client to the server when
 /// files were renamed from within the client.
 pub const DidRenameFilesNotification = struct {
-    pub const method = "workspace/didRenameFiles";
-    pub const @"type" = ManuallyTranslateValue;
-    pub const HandlerSignature = NotificationHandler;
+    comptime method: []const u8 = "workspace/didRenameFiles",
+    params: RenameFilesParams,
 };
 
 /// The parameters sent in file rename requests/notifications.
@@ -4344,17 +4338,15 @@ pub const FileRename = struct {
 /// The will rename files request is sent from the client to the server before files are actually
 /// renamed as long as the rename is triggered from within the client.
 pub const WillRenameFilesRequest = struct {
-    pub const method = "workspace/willRenameFiles";
-    pub const @"type" = ManuallyTranslateValue;
-    pub const HandlerSignature = RequestHandler;
+    comptime method: []const u8 = "workspace/willRenameFiles",
+    params: RenameFilesParams,
 };
 
 /// The will delete files request is sent from the client to the server before files are actually
 /// deleted as long as the deletion is triggered from within the client.
 pub const DidDeleteFilesNotification = struct {
-    pub const method = "workspace/didDeleteFiles";
-    pub const @"type" = ManuallyTranslateValue;
-    pub const HandlerSignature = NotificationHandler;
+    comptime method: []const u8 = "workspace/didDeleteFiles",
+    params: DeleteFilesParams,
 };
 
 /// The parameters sent in file delete requests/notifications.
@@ -4372,9 +4364,8 @@ pub const FileDelete = struct {
 /// The did delete files notification is sent from the client to the server when
 /// files were deleted from within the client.
 pub const WillDeleteFilesRequest = struct {
-    pub const method = "workspace/willDeleteFiles";
-    pub const @"type" = ManuallyTranslateValue;
-    pub const HandlerSignature = RequestHandler;
+    comptime method: []const u8 = "workspace/willDeleteFiles",
+    params: DeleteFilesParams,
 };
 
 /// Moniker uniqueness level to define scope of the moniker.
@@ -4442,8 +4433,8 @@ pub const MonikerParams = struct {
 /// The request parameter is of type [TextDocumentPositionParams](#TextDocumentPositionParams).
 /// The response is of type [Moniker[]](#Moniker[]) or `null`.
 pub const MonikerRequest = struct {
-    pub const method = "textDocument/moniker";
-    pub const @"type" = ManuallyTranslateValue;
+    comptime method: []const u8 = "textDocument/moniker",
+    params: MonikerParams,
 };
 pub const ColorProviderOptions = DocumentColorOptions;
 pub const ColorOptions = DocumentColorOptions;

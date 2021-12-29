@@ -21,7 +21,7 @@ var protocolSchemaEmitter = new TypeEmitter(writeStream, protocolSchema);
 /**
  * Damn nasty root types!! We don't want these!
  */
-const NUKE = [/MessageSignature/, /HandlerResult/, /integer/, /decimal/, /LSP.+/, /_.*/];
+const NUKE = [/MessageSignature/, /HandlerResult/, /integer/, /decimal/, /LSP.+/, /_.*/, /.+Handler/];
 
 writeStream.write(base);
 for (const child of utils.sortChildren(typeSchema.children)) {

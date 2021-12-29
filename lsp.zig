@@ -64,24 +64,25 @@ test "string-backed enum stringify" {
 /// The LSP any type
 const LSPAny = std.json.Value;
 
-const ManuallyTranslateValue = @compileError("bruh 😭");
+// const ManuallyTranslateValue = @compileError("bruh 😭");
+const ManuallyTranslateValue = LSPAny;
 
 fn Undefinedable(comptime T: type) type {
     return T;
 }
 
 /// A tagging type for string properties that are actually document URIs.
-const DocumentUri = []const u8;
+pub const DocumentUri = []const u8;
 
 /// A tagging type for string properties that are actually URIs
-const URI = []const u8;
+pub const URI = []const u8;
 
 /// Position in a text document expressed as zero-based line and character offset.
 /// The offsets are based on a UTF-16 string representation. So a string of the form
 /// `a𐐀b` the character offset of the character `a` is 0, the character offset of `𐐀`
 /// is 1 and the character offset of b is 3 since `𐐀` is represented using two code
 /// units in UTF-16.
-const Position = struct {
+pub const Position = struct {
     /// Line position in a document (zero-based).
     line: i64,
 
@@ -92,7 +93,7 @@ const Position = struct {
 };
 
 /// A range in a text document expressed as (zero-based) start and end positions.
-const Range = struct {
+pub const Range = struct {
     /// The range's start position
     start: Position,
 
@@ -102,14 +103,14 @@ const Range = struct {
 
 /// Represents a location inside a resource, such as a line
 /// inside a text file.
-const Location = struct {
+pub const Location = struct {
     uri: []const u8,
     range: Range,
 };
 
 /// Represents the connection of two locations. Provides additional metadata over normal [locations](#Location),
 /// including an origin range.
-const LocationLink = struct {
+pub const LocationLink = struct {
     /// Span of the origin of this link.
     originSelectionRange: Undefinedable(Range),
 
@@ -127,7 +128,7 @@ const LocationLink = struct {
 };
 
 /// Represents a color in RGBA space.
-const Color = struct {
+pub const Color = struct {
     /// The red component of this color in the range [0-1].
     red: i64,
 
@@ -142,14 +143,14 @@ const Color = struct {
 };
 
 /// Represents a color range from a document.
-const ColorInformation = struct {
+pub const ColorInformation = struct {
     /// The range in the document where this color appears.
     range: Range,
 
     /// The actual color value for this color range.
     color: Color,
 };
-const ColorPresentation = struct {
+pub const ColorPresentation = struct {
     /// The label of this color presentation. It will be shown on the color
     /// picker header. By default this is also the text that is inserted when selecting
     /// this color presentation.
@@ -166,14 +167,14 @@ const ColorPresentation = struct {
 };
 
 /// Enum of known range kinds
-const FoldingRangeKind = struct {
-    const Comment = "comment";
-    const Imports = "imports";
-    const Region = "region";
+pub const FoldingRangeKind = struct {
+    pub const Comment = "comment";
+    pub const Imports = "imports";
+    pub const Region = "region";
 };
 /// Represents a folding range. To be valid, start and end line must be bigger than zero and smaller
 /// than the number of lines in the document. Clients are free to ignore invalid ranges.
-const FoldingRange = struct {
+pub const FoldingRange = struct {
     /// The zero-based start line of the range to fold. The folded area starts after the line's last character.
     /// To be valid, the end must be zero or larger and smaller than the number of lines in the document.
     startLine: i64,
@@ -197,7 +198,7 @@ const FoldingRange = struct {
 /// Represents a related message and source code location for a diagnostic. This should be
 /// used to point to code locations that cause or related to a diagnostics, e.g when duplicating
 /// a symbol in a scope.
-const DiagnosticRelatedInformation = struct {
+pub const DiagnosticRelatedInformation = struct {
     /// The location of this related diagnostic information.
     location: Location,
 
@@ -206,7 +207,7 @@ const DiagnosticRelatedInformation = struct {
 };
 
 /// The diagnostic's severity.
-const DiagnosticSeverity = enum(i64) {
+pub const DiagnosticSeverity = enum(i64) {
     Error = 1,
     Warning = 2,
     Information = 3,
@@ -216,7 +217,7 @@ const DiagnosticSeverity = enum(i64) {
 };
 
 /// The diagnostic tags.
-const DiagnosticTag = enum(i64) {
+pub const DiagnosticTag = enum(i64) {
     Unnecessary = 1,
     Deprecated = 2,
 
@@ -224,14 +225,14 @@ const DiagnosticTag = enum(i64) {
 };
 
 /// Structure to capture a description for an error code.
-const CodeDescription = struct {
+pub const CodeDescription = struct {
     /// An URI to open with more information about the diagnostic error.
     href: []const u8,
 };
 
 /// Represents a diagnostic, such as a compiler error or warning. Diagnostic objects
 /// are only valid in the scope of a resource.
-const Diagnostic = struct {
+pub const Diagnostic = struct {
     /// The range at which the message applies
     range: Range,
 
@@ -272,7 +273,7 @@ const Diagnostic = struct {
 /// will be used to represent a command in the UI and, optionally,
 /// an array of arguments which will be passed to the command handler
 /// function when invoked.
-const Command = struct {
+pub const Command = struct {
     /// Title of the command, like `save`.
     title: []const u8,
 
@@ -285,7 +286,7 @@ const Command = struct {
 };
 
 /// A text edit applicable to a text document.
-const TextEdit = struct {
+pub const TextEdit = struct {
     /// The range of the text document to be manipulated. To insert
     /// text into a document create a range where start === end.
     range: Range,
@@ -296,7 +297,7 @@ const TextEdit = struct {
 };
 
 /// Additional information that describes document changes.
-const ChangeAnnotation = struct {
+pub const ChangeAnnotation = struct {
     /// A human-readable string describing the actual change. The string
     /// is rendered prominent in the user interface.
     label: []const u8,
@@ -311,10 +312,10 @@ const ChangeAnnotation = struct {
 };
 
 /// An identifier to refer to a change annotation stored with a workspace edit.
-const ChangeAnnotationIdentifier = []const u8;
+pub const ChangeAnnotationIdentifier = []const u8;
 
 /// A special text edit with an additional change annotation.
-const AnnotatedTextEdit = struct {
+pub const AnnotatedTextEdit = struct {
     /// The actual identifier of the change annotation
     annotationId: []const u8,
 
@@ -331,7 +332,7 @@ const AnnotatedTextEdit = struct {
 /// on a document version Si and after they are applied move the document to version Si+1.
 /// So the creator of a TextDocumentEdit doesn't need to sort the array of edits or do any
 /// kind of ordering. However the edits must be non overlapping.
-const TextDocumentEdit = struct {
+pub const TextDocumentEdit = struct {
     /// The text document to change.
     textDocument: OptionalVersionedTextDocumentIdentifier,
 
@@ -343,7 +344,7 @@ const TextDocumentEdit = struct {
 };
 
 /// Options to create a file.
-const CreateFileOptions = struct {
+pub const CreateFileOptions = struct {
     /// Overwrite existing file. Overwrite wins over `ignoreIfExists`
     overwrite: Undefinedable(bool),
 
@@ -352,7 +353,7 @@ const CreateFileOptions = struct {
 };
 
 /// Create file operation.
-const CreateFile = struct {
+pub const CreateFile = struct {
     /// A create
     comptime kind: []const u8 = "create",
 
@@ -367,7 +368,7 @@ const CreateFile = struct {
 };
 
 /// Rename file options
-const RenameFileOptions = struct {
+pub const RenameFileOptions = struct {
     /// Overwrite target if existing. Overwrite wins over `ignoreIfExists`
     overwrite: Undefinedable(bool),
 
@@ -376,7 +377,7 @@ const RenameFileOptions = struct {
 };
 
 /// Rename file operation
-const RenameFile = struct {
+pub const RenameFile = struct {
     /// A rename
     comptime kind: []const u8 = "rename",
 
@@ -394,7 +395,7 @@ const RenameFile = struct {
 };
 
 /// Delete file options
-const DeleteFileOptions = struct {
+pub const DeleteFileOptions = struct {
     /// Delete the content recursively if a folder is denoted.
     recursive: Undefinedable(bool),
 
@@ -403,7 +404,7 @@ const DeleteFileOptions = struct {
 };
 
 /// Delete file operation
-const DeleteFile = struct {
+pub const DeleteFile = struct {
     /// A delete
     comptime kind: []const u8 = "delete",
 
@@ -420,7 +421,7 @@ const DeleteFile = struct {
 /// A workspace edit represents changes to many resources managed in the workspace. The edit
 /// should either provide `changes` or `documentChanges`. If documentChanges are present
 /// they are preferred over `changes` if the client can handle versioned document edits.
-const WorkspaceEdit = struct {
+pub const WorkspaceEdit = struct {
     /// Holds changes to existing resources.
     changes: Undefinedable(ManuallyTranslateValue),
 
@@ -441,16 +442,16 @@ const WorkspaceEdit = struct {
 };
 
 /// A change to capture text edits for existing resources.
-const TextEditChange = struct {};
+pub const TextEditChange = struct {};
 
 /// A literal to identify a text document in the client.
-const TextDocumentIdentifier = struct {
+pub const TextDocumentIdentifier = struct {
     /// The text document's uri.
     uri: []const u8,
 };
 
 /// A text document identifier to denote a specific version of a text document.
-const VersionedTextDocumentIdentifier = struct {
+pub const VersionedTextDocumentIdentifier = struct {
     /// The version number of this document.
     version: i64,
 
@@ -459,7 +460,7 @@ const VersionedTextDocumentIdentifier = struct {
 };
 
 /// A text document identifier to optionally denote a specific version of a text document.
-const OptionalVersionedTextDocumentIdentifier = struct {
+pub const OptionalVersionedTextDocumentIdentifier = struct {
     /// The version number of this document. If a versioned text document identifier
     /// is sent from the server to the client and the file is not open in the editor
     /// (the server has not received an open notification before) the server can send
@@ -473,7 +474,7 @@ const OptionalVersionedTextDocumentIdentifier = struct {
 
 /// An item to transfer a text document from the client to the
 /// server.
-const TextDocumentItem = struct {
+pub const TextDocumentItem = struct {
     /// The text document's uri.
     uri: []const u8,
 
@@ -487,7 +488,7 @@ const TextDocumentItem = struct {
     /// The content of the opened text document.
     text: []const u8,
 };
-const MarkupKind = enum {
+pub const MarkupKind = enum {
     plaintext,
     markdown,
 
@@ -496,7 +497,7 @@ const MarkupKind = enum {
 
 /// A `MarkupContent` literal represents a string value which content is interpreted base on its
 /// kind flag. Currently the protocol supports `plaintext` and `markdown` as markup kinds.
-const MarkupContent = struct {
+pub const MarkupContent = struct {
     /// The type of the Markup
     kind: MarkupKind,
 
@@ -505,7 +506,7 @@ const MarkupContent = struct {
 };
 
 /// The kind of a completion entry.
-const CompletionItemKind = enum(i64) {
+pub const CompletionItemKind = enum(i64) {
     Text = 1,
     Method = 2,
     Function = 3,
@@ -537,7 +538,7 @@ const CompletionItemKind = enum(i64) {
 
 /// Defines whether the insert text in a completion item should be interpreted as
 /// plain text or a snippet.
-const InsertTextFormat = enum(i64) {
+pub const InsertTextFormat = enum(i64) {
     PlainText = 1,
     Snippet = 2,
 
@@ -546,14 +547,14 @@ const InsertTextFormat = enum(i64) {
 
 /// Completion item tags are extra annotations that tweak the rendering of a completion
 /// item.
-const CompletionItemTag = enum(i64) {
+pub const CompletionItemTag = enum(i64) {
     Deprecated = 1,
 
     usingnamespace IntBackedEnumStringify(@This());
 };
 
 /// A special text edit to provide an insert and a replace operation.
-const InsertReplaceEdit = struct {
+pub const InsertReplaceEdit = struct {
     /// The string to be inserted.
     newText: []const u8,
 
@@ -566,7 +567,7 @@ const InsertReplaceEdit = struct {
 
 /// How whitespace and indentation is handled during completion
 /// item insertion.
-const InsertTextMode = enum(i64) {
+pub const InsertTextMode = enum(i64) {
     asIs = 1,
     adjustIndentation = 2,
 
@@ -575,7 +576,7 @@ const InsertTextMode = enum(i64) {
 
 /// A completion item represents a text snippet that is
 /// proposed to complete text that is being typed.
-const CompletionItem = struct {
+pub const CompletionItem = struct {
     /// The label of this completion item. By default
     /// also the text that is inserted when selecting
     /// this completion.
@@ -586,7 +587,7 @@ const CompletionItem = struct {
     kind: Undefinedable(CompletionItemKind),
 
     /// Tags for this completion item.
-    tags: Undefinedable([]1),
+    tags: Undefinedable([]CompletionItemTag),
 
     /// A human-readable string with additional information
     /// about this item, like type or symbol information.
@@ -660,7 +661,7 @@ const CompletionItem = struct {
 
 /// Represents a collection of [completion items](#CompletionItem) to be presented
 /// in the editor.
-const CompletionList = struct {
+pub const CompletionList = struct {
     /// This list it not complete. Further typing results in recomputing this list.
     isIncomplete: bool,
 
@@ -672,7 +673,7 @@ const CompletionList = struct {
 /// or a code-block that provides a language and a code snippet. The language identifier
 /// is semantically equal to the optional language identifier in fenced code blocks in GitHub
 /// issues. See https://help.github.com/articles/creating-and-highlighting-code-blocks/#syntax-highlighting
-const MarkedString = union(enum) {
+pub const MarkedString = union(enum) {
     string: []const u8,
     reflection: struct {
         language: []const u8,
@@ -681,7 +682,7 @@ const MarkedString = union(enum) {
 };
 
 /// The result of a hover request.
-const Hover = struct {
+pub const Hover = struct {
     /// The hover's content
     contents: union(enum) {
         MarkupContent: MarkupContent,
@@ -695,7 +696,7 @@ const Hover = struct {
 
 /// Represents a parameter of a callable-signature. A parameter can
 /// have a label and a doc-comment.
-const ParameterInformation = struct {
+pub const ParameterInformation = struct {
     /// The label of this parameter information.
     label: union(enum) {
         string: []const u8,
@@ -716,7 +717,7 @@ const ParameterInformation = struct {
 /// Represents the signature of something callable. A signature
 /// can have a label, like a function-name, a doc-comment, and
 /// a set of parameters.
-const SignatureInformation = struct {
+pub const SignatureInformation = struct {
     /// The label of this signature. Will be shown in
     /// the UI.
     label: []const u8,
@@ -738,7 +739,7 @@ const SignatureInformation = struct {
 /// Signature help represents the signature of something
 /// callable. There can be multiple signature but only one
 /// active and only one active parameter.
-const SignatureHelp = struct {
+pub const SignatureHelp = struct {
     /// One or more signatures.
     signatures: []SignatureInformation,
 
@@ -754,32 +755,32 @@ const SignatureHelp = struct {
 /// The definition of a symbol represented as one or many [locations](#Location).
 /// For most programming languages there is only one location at which a symbol is
 /// defined.
-const Definition = union(enum) {
+pub const Definition = union(enum) {
     Location: Location,
     array: []Location,
 };
 
 /// Information about where a symbol is defined.
-const DefinitionLink = LocationLink;
+pub const DefinitionLink = LocationLink;
 
 /// The declaration of a symbol representation as one or many [locations](#Location).
-const Declaration = union(enum) {
+pub const Declaration = union(enum) {
     Location: Location,
     array: []Location,
 };
 
 /// Information about where a symbol is declared.
-const DeclarationLink = LocationLink;
+pub const DeclarationLink = LocationLink;
 
 /// Value-object that contains additional information when
 /// requesting references.
-const ReferenceContext = struct {
+pub const ReferenceContext = struct {
     /// Include the declaration of the current symbol.
     includeDeclaration: bool,
 };
 
 /// A document highlight kind.
-const DocumentHighlightKind = enum(i64) {
+pub const DocumentHighlightKind = enum(i64) {
     Text = 1,
     Read = 2,
     Write = 3,
@@ -790,7 +791,7 @@ const DocumentHighlightKind = enum(i64) {
 /// A document highlight is a range inside a text document which deserves
 /// special attention. Usually a document highlight is visualized by changing
 /// the background color of its range.
-const DocumentHighlight = struct {
+pub const DocumentHighlight = struct {
     /// The range this highlight applies to.
     range: Range,
 
@@ -799,7 +800,7 @@ const DocumentHighlight = struct {
 };
 
 /// A symbol kind.
-const SymbolKind = enum(i64) {
+pub const SymbolKind = enum(i64) {
     File = 1,
     Module = 2,
     Namespace = 3,
@@ -831,7 +832,7 @@ const SymbolKind = enum(i64) {
 };
 
 /// Symbol tags are extra annotations that tweak the rendering of a symbol.
-const SymbolTag = enum(i64) {
+pub const SymbolTag = enum(i64) {
     Deprecated = 1,
 
     usingnamespace IntBackedEnumStringify(@This());
@@ -839,7 +840,7 @@ const SymbolTag = enum(i64) {
 
 /// Represents information about programming constructs like variables, classes,
 /// interfaces etc.
-const SymbolInformation = struct {
+pub const SymbolInformation = struct {
     /// The name of this symbol.
     name: []const u8,
 
@@ -847,7 +848,7 @@ const SymbolInformation = struct {
     kind: SymbolKind,
 
     /// Tags for this completion item.
-    tags: Undefinedable([]1),
+    tags: Undefinedable([]CompletionItemTag),
 
     /// Indicates if this symbol is deprecated.
     deprecated: Undefinedable(bool),
@@ -870,7 +871,7 @@ const SymbolInformation = struct {
 /// that appear in a document. Document symbols can be hierarchical and they
 /// have two ranges: one that encloses its definition and one that points to
 /// its most interesting range, e.g. the range of an identifier.
-const DocumentSymbol = struct {
+pub const DocumentSymbol = struct {
     /// The name of this symbol. Will be displayed in the user interface and therefore must not be
     /// an empty string or a string only consisting of white spaces.
     name: []const u8,
@@ -882,7 +883,7 @@ const DocumentSymbol = struct {
     kind: SymbolKind,
 
     /// Tags for this completion item.
-    tags: Undefinedable([]1),
+    tags: Undefinedable([]CompletionItemTag),
 
     /// Indicates if this symbol is deprecated.
     deprecated: Undefinedable(bool),
@@ -897,34 +898,34 @@ const DocumentSymbol = struct {
     selectionRange: Range,
 
     /// Children of this symbol, e.g. properties of a class.
-    children: Undefinedable([]DocumentSymbol),
+    children: []DocumentSymbol,
 };
 
 /// A set of predefined code action kinds
-const CodeActionKind = struct {
+pub const CodeActionKind = struct {
     /// Empty kind.
-    const Empty = "";
+    pub const Empty = "";
     /// Base kind for quickfix actions: 'quickfix'
-    const QuickFix = "quickfix";
+    pub const QuickFix = "quickfix";
     /// Base kind for refactoring actions: 'refactor'
-    const Refactor = "refactor";
+    pub const Refactor = "refactor";
     /// Base kind for refactoring extraction actions: 'refactor.extract'
-    const RefactorExtract = "refactor.extract";
+    pub const RefactorExtract = "refactor.extract";
     /// Base kind for refactoring inline actions: 'refactor.inline'
-    const RefactorInline = "refactor.inline";
+    pub const RefactorInline = "refactor.inline";
     /// Base kind for refactoring rewrite actions: 'refactor.rewrite'
-    const RefactorRewrite = "refactor.rewrite";
+    pub const RefactorRewrite = "refactor.rewrite";
     /// Base kind for source actions: `source`
-    const Source = "source";
+    pub const Source = "source";
     /// Base kind for an organize imports source action: `source.organizeImports`
-    const SourceOrganizeImports = "source.organizeImports";
+    pub const SourceOrganizeImports = "source.organizeImports";
     /// Base kind for auto-fix source actions: `source.fixAll`.
-    const SourceFixAll = "source.fixAll";
+    pub const SourceFixAll = "source.fixAll";
 };
 
 /// Contains additional diagnostic information about the context in which
 /// a [code action](#CodeActionProvider.provideCodeActions) is run.
-const CodeActionContext = struct {
+pub const CodeActionContext = struct {
     /// An array of diagnostics known on the client side overlapping the range provided to the
     /// `textDocument/codeAction` request. They are provided so that the server knows which
     /// errors are currently presented to the user for the given range. There is no guarantee
@@ -938,7 +939,7 @@ const CodeActionContext = struct {
 
 /// A code action represents a change that can be performed in code, e.g. to fix a problem or
 /// to refactor code.
-const CodeAction = struct {
+pub const CodeAction = struct {
     /// A short, human-readable, title for this code action.
     title: []const u8,
 
@@ -973,7 +974,7 @@ const CodeAction = struct {
 
 /// A code lens represents a [command](#Command) that should be shown along with
 /// source text, like the number of references, a way to run tests, etc.
-const CodeLens = struct {
+pub const CodeLens = struct {
     /// The range in which this code lens is valid. Should only span a single line.
     range: Range,
 
@@ -987,7 +988,7 @@ const CodeLens = struct {
 };
 
 /// Value-object describing what options formatting should use.
-const FormattingOptions = struct {
+pub const FormattingOptions = struct {
     /// Size of a tab in spaces.
     tabSize: i64,
 
@@ -1006,7 +1007,7 @@ const FormattingOptions = struct {
 
 /// A document link is a range in a text document that links to an internal or external resource, like another
 /// text document or a web site.
-const DocumentLink = struct {
+pub const DocumentLink = struct {
     /// The range this link applies to.
     range: Range,
 
@@ -1023,17 +1024,18 @@ const DocumentLink = struct {
 
 /// A selection range represents a part of a selection hierarchy. A selection range
 /// may have a parent selection range that contains it.
-const SelectionRange = struct {
+pub const SelectionRange = struct {
     /// The [range](#Range) of this selection range.
     range: Range,
 
-    /// The parent selection range containing this range. Therefore `parent.range` must contain `this.range`.
-    parent: Undefinedable(SelectionRange),
+    // The parent selection range containing this range. Therefore `parent.range` must contain `this.range`.
+    // TODO: Handle this
+    // parent: Undefinedable(SelectionRange),
 };
 
 /// Represents programming constructs like functions or constructors in the context
 /// of call hierarchy.
-const CallHierarchyItem = struct {
+pub const CallHierarchyItem = struct {
     /// The name of this item.
     name: []const u8,
 
@@ -1041,7 +1043,7 @@ const CallHierarchyItem = struct {
     kind: SymbolKind,
 
     /// Tags for this item.
-    tags: Undefinedable([]1),
+    tags: Undefinedable([]SymbolTag),
 
     /// More detail for this item, e.g. the signature of a function.
     detail: Undefinedable([]const u8),
@@ -1062,7 +1064,7 @@ const CallHierarchyItem = struct {
 };
 
 /// Represents an incoming call, e.g. a caller of a method or constructor.
-const CallHierarchyIncomingCall = struct {
+pub const CallHierarchyIncomingCall = struct {
     /// The item that makes the call.
     from: CallHierarchyItem,
 
@@ -1072,7 +1074,7 @@ const CallHierarchyIncomingCall = struct {
 };
 
 /// Represents an outgoing call, e.g. calling a getter from a method or a method from a constructor etc.
-const CallHierarchyOutgoingCall = struct {
+pub const CallHierarchyOutgoingCall = struct {
     /// The item that is called.
     to: CallHierarchyItem,
 
@@ -1081,10 +1083,10 @@ const CallHierarchyOutgoingCall = struct {
     /// and not [`this.to`](#CallHierarchyOutgoingCall.to).
     fromRanges: []Range,
 };
-const EOL = ManuallyTranslateValue;
+pub const EOL = ManuallyTranslateValue;
 /// A simple text document. Not to be implemented. The document keeps the content
 /// as string.
-const TextDocument = struct {
+pub const TextDocument = struct {
     /// The associated URI for this document. Most documents have the __file__-scheme, indicating that they
     /// represent files on disk. However, some documents may have other schemes indicating that they are not
     /// available on disk.
@@ -1100,21 +1102,21 @@ const TextDocument = struct {
     /// The number of lines in this document.
     lineCount: i64,
 };
-const WorkspaceFoldersClientCapabilities = struct {
+pub const WorkspaceFoldersClientCapabilities = struct {
     /// The workspace client capabilities
     workspace: Undefinedable(struct {
         /// The client has support for workspace folders
         workspaceFolders: Undefinedable(bool),
     }),
 };
-const ConfigurationClientCapabilities = struct {
+pub const ConfigurationClientCapabilities = struct {
     /// The workspace client capabilities
     workspace: Undefinedable(struct {
         /// The client supports `workspace/configuration` requests.
         configuration: Undefinedable(bool),
     }),
 };
-const WorkDoneProgressClientCapabilities = struct {
+pub const WorkDoneProgressClientCapabilities = struct {
     /// Window specific client capabilities.
     window: Undefinedable(struct {
         /// Whether client supports server initiated progress using the
@@ -1122,7 +1124,7 @@ const WorkDoneProgressClientCapabilities = struct {
         workDoneProgress: Undefinedable(bool),
     }),
 };
-const WorkspaceFoldersServerCapabilities = struct {
+pub const WorkspaceFoldersServerCapabilities = struct {
     /// The workspace server capabilities
     workspace: Undefinedable(struct {
         workspaceFolders: Undefinedable(struct {
@@ -1138,22 +1140,22 @@ const WorkspaceFoldersServerCapabilities = struct {
         }),
     }),
 };
-const WorkspaceFoldersInitializeParams = struct {
+pub const WorkspaceFoldersInitializeParams = struct {
     /// The actual configured workspace folders.
     workspaceFolders: ?[]WorkspaceFolder,
 };
-const ProgressToken = union(enum) {
+pub const ProgressToken = union(enum) {
     number: i64,
     string: []const u8,
 };
-const SemanticTokensWorkspaceClientCapabilities = struct {
+pub const SemanticTokensWorkspaceClientCapabilities = struct {
     /// Whether the client implementation supports a refresh request sent from
     /// the server to the client.
     refreshSupport: Undefinedable(bool),
 };
 
 /// Since 3.6.0
-const TypeDefinitionClientCapabilities = struct {
+pub const TypeDefinitionClientCapabilities = struct {
     /// Whether implementation supports dynamic registration. If this is set to `true`
     /// the client supports the new `TypeDefinitionRegistrationOptions` return value
     /// for the corresponding server capability as well.
@@ -1162,7 +1164,7 @@ const TypeDefinitionClientCapabilities = struct {
     /// The client supports additional metadata in the form of definition links.
     linkSupport: Undefinedable(bool),
 };
-const ImplementationClientCapabilities = struct {
+pub const ImplementationClientCapabilities = struct {
     /// Whether implementation supports dynamic registration. If this is set to `true`
     /// the client supports the new `ImplementationRegistrationOptions` return value
     /// for the corresponding server capability as well.
@@ -1171,19 +1173,19 @@ const ImplementationClientCapabilities = struct {
     /// The client supports additional metadata in the form of definition links.
     linkSupport: Undefinedable(bool),
 };
-const DocumentColorClientCapabilities = struct {
+pub const DocumentColorClientCapabilities = struct {
     /// Whether implementation supports dynamic registration. If this is set to `true`
     /// the client supports the new `DocumentColorRegistrationOptions` return value
     /// for the corresponding server capability as well.
     dynamicRegistration: Undefinedable(bool),
 };
-const RequestHandler = struct {};
-const RequestHandler0 = struct {};
-const NotificationHandler = struct {};
+pub const RequestHandler = struct {};
+pub const RequestHandler0 = struct {};
+pub const NotificationHandler = struct {};
 
 /// A filter to describe in which file operation requests or notifications
 /// the server is interested in.
-const FileOperationFilter = struct {
+pub const FileOperationFilter = struct {
     /// A Uri like `file` or `untitled`.
     scheme: Undefinedable([]const u8),
 
@@ -1194,18 +1196,18 @@ const FileOperationFilter = struct {
 /// Defines a CancellationToken. This interface is not
 /// intended to be implemented. A CancellationToken must
 /// be created via a CancellationTokenSource.
-const CancellationToken = struct {
+pub const CancellationToken = struct {
     /// Is `true` when the token has been cancelled, `false` otherwise.
     isCancellationRequested: bool,
 
     /// An [event](#Event) which fires upon cancellation.
     onCancellationRequested: Event,
 };
-const Thenable = struct {};
+pub const Thenable = struct {};
 
 /// A pattern to describe in which file operation requests or notifications
 /// the server is interested in.
-const FileOperationPattern = struct {
+pub const FileOperationPattern = struct {
     /// The glob pattern to match. Glob patterns can have the following syntax:
     /// - `*` to match one or more characters in a path segment
     /// - `?` to match on one character in a path segment
@@ -1221,18 +1223,18 @@ const FileOperationPattern = struct {
     /// Additional options used during matching.
     options: Undefinedable(FileOperationPatternOptions),
 };
-const Event = struct {};
+pub const Event = struct {};
 
 /// A generic resource operation.
-const ResourceOperation = struct {
+pub const ResourceOperation = struct {
     /// The resource operation kind.
     kind: []const u8,
 
     /// An optional annotation identifier describing the operation.
     annotationId: Undefinedable([]const u8),
 };
-const Disposable = struct {};
-const ResponseErrorLiteral = struct {
+pub const Disposable = struct {};
+pub const ResponseErrorLiteral = struct {
     /// A number indicating the error type that occured.
     code: i64,
 
@@ -1241,53 +1243,33 @@ const ResponseErrorLiteral = struct {
 
     /// A Primitive or Structured value that contains additional
     /// information about the error. Can be omitted.
-    data: Undefinedable(D),
+    data: LSPAny,
 };
 
 /// A document filter denotes a document by different properties like
 /// the [language](#TextDocument.languageId), the [scheme](#Uri.scheme) of
 /// its resource, or a glob-pattern that is applied to the [path](#TextDocument.fileName).
-const DocumentFilter = union(enum) {
+pub const DocumentFilter = union(enum) {
     reflection: struct {
         /// A language id, like `typescript`.
-        language: []const u8,
+        language: ?[]const u8 = null,
 
         /// A glob pattern, like `*.{ts,js}`.
-        pattern: Undefinedable([]const u8),
+        pattern: ?[]const u8 = null,
 
         /// A Uri [scheme](#Uri.scheme), like `file` or `untitled`.
-        scheme: Undefinedable([]const u8),
-    },
-    reflection: struct {
-        /// A language id, like `typescript`.
-        language: Undefinedable([]const u8),
-
-        /// A glob pattern, like `*.{ts,js}`.
-        pattern: Undefinedable([]const u8),
-
-        /// A Uri [scheme](#Uri.scheme), like `file` or `untitled`.
-        scheme: []const u8,
-    },
-    reflection: struct {
-        /// A language id, like `typescript`.
-        language: Undefinedable([]const u8),
-
-        /// A glob pattern, like `*.{ts,js}`.
-        pattern: []const u8,
-
-        /// A Uri [scheme](#Uri.scheme), like `file` or `untitled`.
-        scheme: Undefinedable([]const u8),
+        scheme: ?[]const u8 = null,
     },
 };
 
 /// A document selector is the combination of one or many document filters.
-const DocumentSelector = []union(enum) {
+pub const DocumentSelector = []union(enum) {
     string: []const u8,
     DocumentFilter: DocumentFilter,
 };
 
 /// General parameters to to register for an notification or to register a provider.
-const Registration = struct {
+pub const Registration = struct {
     /// The id used to register the request. The id can be used to deregister
     /// the request again.
     id: []const u8,
@@ -1298,18 +1280,18 @@ const Registration = struct {
     /// Options necessary for the registration.
     registerOptions: Undefinedable(std.json.Value),
 };
-const RegistrationParams = struct {
+pub const RegistrationParams = struct {
     registrations: []Registration,
 };
 
 /// The `client/registerCapability` request is sent from the server to the client to register a new capability
 /// handler on the client side.
-const RegistrationRequest = struct {
-    const @"type" = ManuallyTranslateValue;
+pub const RegistrationRequest = struct {
+    pub const @"type" = ManuallyTranslateValue;
 };
 
 /// General parameters to unregister a request or notification.
-const Unregistration = struct {
+pub const Unregistration = struct {
     /// The id used to unregister the request or notification. Usually an id
     /// provided during the register request.
     id: []const u8,
@@ -1317,20 +1299,20 @@ const Unregistration = struct {
     /// The method to unregister for.
     method: []const u8,
 };
-const UnregistrationParams = struct {
+pub const UnregistrationParams = struct {
     unregisterations: []Unregistration,
 };
 
 /// The `client/unregisterCapability` request is sent from the server to the client to unregister a previously registered capability
 /// handler on the client side.
-const UnregistrationRequest = struct {
-    const @"type" = ManuallyTranslateValue;
+pub const UnregistrationRequest = struct {
+    pub const @"type" = ManuallyTranslateValue;
 };
-const WorkDoneProgressParams = struct {
+pub const WorkDoneProgressParams = struct {
     /// An optional token that a server can use to report work done progress.
     workDoneToken: Undefinedable(ProgressToken),
 };
-const PartialResultParams = struct {
+pub const PartialResultParams = struct {
     /// An optional token that a server can use to report partial results (e.g. streaming) to
     /// the client.
     partialResultToken: Undefinedable(ProgressToken),
@@ -1338,39 +1320,39 @@ const PartialResultParams = struct {
 
 /// A parameter literal used in requests to pass a text document and a position inside that
 /// document.
-const TextDocumentPositionParams = struct {
+pub const TextDocumentPositionParams = struct {
     /// The text document.
     textDocument: TextDocumentIdentifier,
 
     /// The position inside the text document.
     position: Position,
 };
-const ResourceOperationKind = struct {
+pub const ResourceOperationKind = struct {
     /// Supports creating new files and folders.
-    const Create = "create";
+    pub const Create = "create";
     /// Supports renaming existing files and folders.
-    const Rename = "rename";
+    pub const Rename = "rename";
     /// Supports deleting existing files and folders.
-    const Delete = "delete";
+    pub const Delete = "delete";
 };
-const FailureHandlingKind = struct {
+pub const FailureHandlingKind = struct {
     /// Applying the workspace change is simply aborted if one of the changes provided
     /// fails. All operations executed before the failing operation stay executed.
-    const Abort = "abort";
+    pub const Abort = "abort";
     /// All operations are executed transactional. That means they either all
     /// succeed or no changes at all are applied to the workspace.
-    const Transactional = "transactional";
+    pub const Transactional = "transactional";
     /// If the workspace edit contains only textual file changes they are executed transactional.
     /// If resource changes (create, rename or delete file) are part of the change the failure
     /// handling strategy is abort.
-    const TextOnlyTransactional = "textOnlyTransactional";
+    pub const TextOnlyTransactional = "textOnlyTransactional";
     /// The client tries to undo the operations already executed. But there is no
     /// guarantee that this is succeeding.
-    const Undo = "undo";
+    pub const Undo = "undo";
 };
 
 /// Workspace specific client capabilities.
-const WorkspaceClientCapabilities = struct {
+pub const WorkspaceClientCapabilities = struct {
     /// The client supports applying batch edits
     /// to the workspace by supporting the request
     /// 'workspace/applyEdit'
@@ -1404,7 +1386,7 @@ const WorkspaceClientCapabilities = struct {
 };
 
 /// Text document specific client capabilities.
-const TextDocumentClientCapabilities = struct {
+pub const TextDocumentClientCapabilities = struct {
     /// Defines which synchronization capabilities the client supports.
     synchronization: Undefinedable(TextDocumentSyncClientCapabilities),
 
@@ -1483,7 +1465,7 @@ const TextDocumentClientCapabilities = struct {
     /// Client capabilities specific to the moniker request.
     moniker: MonikerClientCapabilities,
 };
-const WindowClientCapabilities = struct {
+pub const WindowClientCapabilities = struct {
     /// Whether client supports handling progress notifications. If set
     /// servers are allowed to report in `workDoneProgress` property in the
     /// request specific server capabilities.
@@ -1497,7 +1479,7 @@ const WindowClientCapabilities = struct {
 };
 
 /// Client capabilities specific to regular expressions.
-const RegularExpressionsClientCapabilities = struct {
+pub const RegularExpressionsClientCapabilities = struct {
     /// The engine's name.
     engine: []const u8,
 
@@ -1506,7 +1488,7 @@ const RegularExpressionsClientCapabilities = struct {
 };
 
 /// Client capabilities specific to the used markdown parser.
-const MarkdownClientCapabilities = struct {
+pub const MarkdownClientCapabilities = struct {
     /// The name of the parser.
     parser: []const u8,
 
@@ -1515,14 +1497,14 @@ const MarkdownClientCapabilities = struct {
 };
 
 /// General client capabilities.
-const GeneralClientCapabilities = struct {
+pub const GeneralClientCapabilities = struct {
     /// Client capabilities specific to regular expressions.
     regularExpressions: Undefinedable(RegularExpressionsClientCapabilities),
 
     /// Client capabilities specific to the client's markdown parser.
     markdown: Undefinedable(MarkdownClientCapabilities),
 };
-const ClientCapabilities = struct {
+pub const ClientCapabilities = struct {
     /// Workspace specific client capabilities.
     workspace: Undefinedable(WorkspaceClientCapabilities),
 
@@ -1534,54 +1516,32 @@ const ClientCapabilities = struct {
 
     /// General client capabilities.
     general: Undefinedable(GeneralClientCapabilities),
-
-    /// Experimental client capabilities.
-    experimental: Undefinedable(ManuallyTranslateValue),
-
-    /// The workspace client capabilities
-    workspace: Undefinedable(struct {
-        /// The client has support for workspace folders
-        workspaceFolders: Undefinedable(bool),
-    }),
-
-    /// The workspace client capabilities
-    workspace: Undefinedable(struct {
-        /// The client supports `workspace/configuration` requests.
-        configuration: Undefinedable(bool),
-    }),
-
-    /// Window specific client capabilities.
-    window: Undefinedable(struct {
-        /// Whether client supports server initiated progress using the
-        /// `window/workDoneProgress/create` request.
-        workDoneProgress: Undefinedable(bool),
-    }),
 };
 
 /// Static registration options to be returned in the initialize
 /// request.
-const StaticRegistrationOptions = struct {
+pub const StaticRegistrationOptions = struct {
     /// The id used to register the request. The id can be used to deregister
     /// the request again. See also Registration#id.
     id: Undefinedable([]const u8),
 };
 
 /// General text document registration options.
-const TextDocumentRegistrationOptions = struct {
+pub const TextDocumentRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
 };
 
 /// Save options.
-const SaveOptions = struct {
+pub const SaveOptions = struct {
     /// The client is supposed to include the content on save.
     includeText: Undefinedable(bool),
 };
-const WorkDoneProgressOptions = struct {
+pub const WorkDoneProgressOptions = struct {
     workDoneProgress: Undefinedable(bool),
 };
-const ServerCapabilities = struct {
+pub const ServerCapabilities = struct {
     /// Defines how text documents are synced. Is either a detailed structure defining each notification or
     /// for backwards compatibility the TextDocumentSyncKind number.
     textDocumentSync: Undefinedable(union(enum) {
@@ -1733,12 +1693,6 @@ const ServerCapabilities = struct {
         SemanticTokensRegistrationOptions: SemanticTokensRegistrationOptions,
     }),
 
-    /// Window specific server capabilities.
-    workspace: Undefinedable(struct {
-        /// The server is interested in notifications/requests for operations on files.
-        fileOperations: Undefinedable(FileOperationOptions),
-    }),
-
     /// The server provides moniker support.
     monikerProvider: Undefinedable(union(enum) {
         boolean: bool,
@@ -1746,11 +1700,10 @@ const ServerCapabilities = struct {
         MonikerRegistrationOptions: MonikerRegistrationOptions,
     }),
 
-    /// Experimental server capabilities.
-    experimental: Undefinedable(T),
-
     /// The workspace server capabilities
     workspace: Undefinedable(struct {
+        /// The server is interested in notifications/requests for operations on files.
+        fileOperations: Undefinedable(FileOperationOptions),
         workspaceFolders: Undefinedable(struct {
             /// Whether the server wants to receive workspace folder
             /// change notifications.
@@ -1770,10 +1723,10 @@ const ServerCapabilities = struct {
 /// The requests parameter is of type [InitializeParams](#InitializeParams)
 /// the response if of type [InitializeResult](#InitializeResult) of a Thenable that
 /// resolves to such.
-const InitializeRequest = struct {
-    const @"type" = ManuallyTranslateValue;
+pub const InitializeRequest = struct {
+    pub const @"type" = ManuallyTranslateValue;
 };
-const InitializeParams = struct {
+pub const InitializeParams = struct {
     /// The process Id of the parent process that started
     /// the server.
     processId: ?i64,
@@ -1824,7 +1777,7 @@ const InitializeParams = struct {
 };
 
 /// The result returned from an initialize request.
-const InitializeResult = struct {
+pub const InitializeResult = struct {
     /// The capabilities the language server provides.
     capabilities: ServerCapabilities,
 
@@ -1840,7 +1793,7 @@ const InitializeResult = struct {
 
 /// The data type of the ResponseError if the
 /// initialize request fails.
-const InitializeError = struct {
+pub const InitializeError = struct {
     /// Indicates whether the client execute the following retry logic:
     /// (1) show the message provided by the ResponseError to the user
     /// (2) user selects retry or cancel
@@ -1849,34 +1802,34 @@ const InitializeError = struct {
 };
 
 /// Known error codes for an `InitializeError`;
-const InitializeError = enum(i64) {
+pub const InitializeErrorCode = enum(i64) {
     unknownProtocolVersion = 1,
 
     usingnamespace IntBackedEnumStringify(@This());
 };
-const InitializedParams = struct {};
+pub const InitializedParams = struct {};
 
 /// The initialized notification is sent from the client to the
 /// server after the client is fully initialized and the server
 /// is allowed to send requests from the server to the client.
-const InitializedNotification = struct {
-    const @"type" = ManuallyTranslateValue;
+pub const InitializedNotification = struct {
+    pub const @"type" = ManuallyTranslateValue;
 };
 
 /// A shutdown request is sent from the client to the server.
 /// It is sent once when the client decides to shutdown the
 /// server. The only notification that is sent after a shutdown request
 /// is the exit event.
-const ShutdownRequest = struct {
-    const @"type" = ManuallyTranslateValue;
+pub const ShutdownRequest = struct {
+    pub const @"type" = ManuallyTranslateValue;
 };
 
 /// The exit event is sent from the client to the server to
 /// ask the server to exit its process.
-const ExitNotification = struct {
-    const @"type" = ManuallyTranslateValue;
+pub const ExitNotification = struct {
+    pub const @"type" = ManuallyTranslateValue;
 };
-const DidChangeConfigurationClientCapabilities = struct {
+pub const DidChangeConfigurationClientCapabilities = struct {
     /// Did change configuration notification supports dynamic registration.
     dynamicRegistration: Undefinedable(bool),
 };
@@ -1884,10 +1837,10 @@ const DidChangeConfigurationClientCapabilities = struct {
 /// The configuration change notification is sent from the client to the server
 /// when the client's configuration has changed. The notification contains
 /// the changed configuration as defined by the language client.
-const DidChangeConfigurationNotification = struct {
-    const @"type" = ManuallyTranslateValue;
+pub const DidChangeConfigurationNotification = struct {
+    pub const @"type" = ManuallyTranslateValue;
 };
-const DidChangeConfigurationRegistrationOptions = struct {
+pub const DidChangeConfigurationRegistrationOptions = struct {
     section: Undefinedable(union(enum) {
         string: []const u8,
         array: [][]const u8,
@@ -1895,13 +1848,13 @@ const DidChangeConfigurationRegistrationOptions = struct {
 };
 
 /// The parameters of a change configuration notification.
-const DidChangeConfigurationParams = struct {
+pub const DidChangeConfigurationParams = struct {
     /// The actual changed settings
     settings: std.json.Value,
 };
 
 /// The message type
-const MessageType = enum(i64) {
+pub const MessageType = enum(i64) {
     Error = 1,
     Warning = 2,
     Info = 3,
@@ -1911,7 +1864,7 @@ const MessageType = enum(i64) {
 };
 
 /// The parameters of a notification message.
-const ShowMessageParams = struct {
+pub const ShowMessageParams = struct {
     /// The message type. See {@link MessageType}
     @"type": MessageType,
 
@@ -1921,12 +1874,12 @@ const ShowMessageParams = struct {
 
 /// The show message notification is sent from a server to a client to ask
 /// the client to display a particular message in the user interface.
-const ShowMessageNotification = struct {
-    const @"type" = ManuallyTranslateValue;
+pub const ShowMessageNotification = struct {
+    pub const @"type" = ManuallyTranslateValue;
 };
 
 /// Show message request client capabilities
-const ShowMessageRequestClientCapabilities = struct {
+pub const ShowMessageRequestClientCapabilities = struct {
     /// Capabilities specific to the `MessageActionItem` type.
     messageActionItem: Undefinedable(struct {
         /// Whether the client supports additional attributes which
@@ -1935,11 +1888,11 @@ const ShowMessageRequestClientCapabilities = struct {
         additionalPropertiesSupport: Undefinedable(bool),
     }),
 };
-const MessageActionItem = struct {
+pub const MessageActionItem = struct {
     /// A short title like 'Retry', 'Open Log' etc.
     title: []const u8,
 };
-const ShowMessageRequestParams = struct {
+pub const ShowMessageRequestParams = struct {
     /// The message type. See {@link MessageType}
     @"type": MessageType,
 
@@ -1952,18 +1905,18 @@ const ShowMessageRequestParams = struct {
 
 /// The show message request is sent from the server to the client to show a message
 /// and a set of options actions to the user.
-const ShowMessageRequest = struct {
-    const @"type" = ManuallyTranslateValue;
+pub const ShowMessageRequest = struct {
+    pub const @"type" = ManuallyTranslateValue;
 };
 
 /// The log message notification is sent from the server to the client to ask
 /// the client to log a particular message.
-const LogMessageNotification = struct {
-    const @"type" = ManuallyTranslateValue;
+pub const LogMessageNotification = struct {
+    pub const @"type" = ManuallyTranslateValue;
 };
 
 /// The log message parameters.
-const LogMessageParams = struct {
+pub const LogMessageParams = struct {
     /// The message type. See {@link MessageType}
     @"type": MessageType,
 
@@ -1973,10 +1926,10 @@ const LogMessageParams = struct {
 
 /// The telemetry event notification is sent from the server to the client to ask
 /// the client to log telemetry data.
-const TelemetryEventNotification = struct {
-    const @"type" = ManuallyTranslateValue;
+pub const TelemetryEventNotification = struct {
+    pub const @"type" = ManuallyTranslateValue;
 };
-const TextDocumentSyncClientCapabilities = struct {
+pub const TextDocumentSyncClientCapabilities = struct {
     /// Whether text document synchronization supports dynamic registration.
     dynamicRegistration: Undefinedable(bool),
 
@@ -1994,14 +1947,14 @@ const TextDocumentSyncClientCapabilities = struct {
 
 /// Defines how the host (editor) should sync
 /// document changes to the language server.
-const TextDocumentSyncKind = enum(i64) {
+pub const TextDocumentSyncKind = enum(i64) {
     None = 0,
     Full = 1,
     Incremental = 2,
 
     usingnamespace IntBackedEnumStringify(@This());
 };
-const TextDocumentSyncOptions = struct {
+pub const TextDocumentSyncOptions = struct {
     /// Open and close notifications are sent to the server. If omitted open close notification should not
     /// be sent.
     openClose: Undefinedable(bool),
@@ -2027,7 +1980,7 @@ const TextDocumentSyncOptions = struct {
 };
 
 /// The parameters send in a open text document notification
-const DidOpenTextDocumentParams = struct {
+pub const DidOpenTextDocumentParams = struct {
     /// The document that was opened.
     textDocument: TextDocumentItem,
 };
@@ -2040,32 +1993,32 @@ const DidOpenTextDocumentParams = struct {
 /// be sent more than once without a corresponding close notification send before.
 /// This means open and close notification must be balanced and the max open count
 /// is one.
-const DidOpenTextDocumentNotification = struct {
-    const method = "textDocument/didOpen";
-    const @"type" = ManuallyTranslateValue;
+pub const DidOpenTextDocumentNotification = struct {
+    pub const method = "textDocument/didOpen";
+    pub const @"type" = ManuallyTranslateValue;
 };
 
 /// An event describing a change to a text document. If range and rangeLength are omitted
 /// the new text is considered to be the full content of the document.
-const TextDocumentContentChangeEvent = union(enum) {
-    reflection: struct {
+pub const TextDocumentContentChangeEvent = union(enum) {
+    partial: struct {
         /// The range of the document that changed.
         range: Range,
 
         /// The optional length of the range that got replaced.
-        rangeLength: Undefinedable(uinteger),
+        rangeLength: Undefinedable(i64),
 
         /// The new text for the provided range.
         text: []const u8,
     },
-    reflection: struct {
+    full: struct {
         /// The new text of the whole document.
         text: []const u8,
     },
 };
 
 /// The change text document notification's parameters.
-const DidChangeTextDocumentParams = struct {
+pub const DidChangeTextDocumentParams = struct {
     /// The document that did change. The version number points
     /// to the version after all provided content changes have
     /// been applied.
@@ -2080,7 +2033,7 @@ const DidChangeTextDocumentParams = struct {
 };
 
 /// Describe options to be used when registered for text document change events.
-const TextDocumentChangeRegistrationOptions = struct {
+pub const TextDocumentChangeRegistrationOptions = struct {
     /// How documents are synced to the server.
     syncKind: TextDocumentSyncKind,
 
@@ -2091,13 +2044,13 @@ const TextDocumentChangeRegistrationOptions = struct {
 
 /// The document change notification is sent from the client to the server to signal
 /// changes to a text document.
-const DidChangeTextDocumentNotification = struct {
-    const method = "textDocument/didChange";
-    const @"type" = ManuallyTranslateValue;
+pub const DidChangeTextDocumentNotification = struct {
+    pub const method = "textDocument/didChange";
+    pub const @"type" = ManuallyTranslateValue;
 };
 
 /// The parameters send in a close text document notification
-const DidCloseTextDocumentParams = struct {
+pub const DidCloseTextDocumentParams = struct {
     /// The document that was closed.
     textDocument: TextDocumentIdentifier,
 };
@@ -2109,13 +2062,13 @@ const DidCloseTextDocumentParams = struct {
 /// is about managing the document's content. Receiving a close notification
 /// doesn't mean that the document was open in an editor before. A close
 /// notification requires a previous open notification to be sent.
-const DidCloseTextDocumentNotification = struct {
-    const method = "textDocument/didClose";
-    const @"type" = ManuallyTranslateValue;
+pub const DidCloseTextDocumentNotification = struct {
+    pub const method = "textDocument/didClose";
+    pub const @"type" = ManuallyTranslateValue;
 };
 
 /// The parameters send in a save text document notification
-const DidSaveTextDocumentParams = struct {
+pub const DidSaveTextDocumentParams = struct {
     /// The document that was closed.
     textDocument: TextDocumentIdentifier,
 
@@ -2125,7 +2078,7 @@ const DidSaveTextDocumentParams = struct {
 };
 
 /// Save registration options.
-const TextDocumentSaveRegistrationOptions = struct {
+pub const TextDocumentSaveRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
@@ -2136,13 +2089,13 @@ const TextDocumentSaveRegistrationOptions = struct {
 
 /// The document save notification is sent from the client to the server when
 /// the document got saved in the client.
-const DidSaveTextDocumentNotification = struct {
-    const method = "textDocument/didSave";
-    const @"type" = ManuallyTranslateValue;
+pub const DidSaveTextDocumentNotification = struct {
+    pub const method = "textDocument/didSave";
+    pub const @"type" = ManuallyTranslateValue;
 };
 
 /// Represents reasons why a text document is saved.
-const TextDocumentSaveReason = enum(i64) {
+pub const TextDocumentSaveReason = enum(i64) {
     Manual = 1,
     AfterDelay = 2,
     FocusOut = 3,
@@ -2151,7 +2104,7 @@ const TextDocumentSaveReason = enum(i64) {
 };
 
 /// The parameters send in a will save text document notification.
-const WillSaveTextDocumentParams = struct {
+pub const WillSaveTextDocumentParams = struct {
     /// The document that will be saved.
     textDocument: TextDocumentIdentifier,
 
@@ -2161,9 +2114,9 @@ const WillSaveTextDocumentParams = struct {
 
 /// A document will save notification is sent from the client to the server before
 /// the document is actually saved.
-const WillSaveTextDocumentNotification = struct {
-    const method = "textDocument/willSave";
-    const @"type" = ManuallyTranslateValue;
+pub const WillSaveTextDocumentNotification = struct {
+    pub const method = "textDocument/willSave";
+    pub const @"type" = ManuallyTranslateValue;
 };
 
 /// A document will save request is sent from the client to the server before
@@ -2172,11 +2125,11 @@ const WillSaveTextDocumentNotification = struct {
 /// clients might drop results if computing the text edits took too long or if a
 /// server constantly fails on this request. This is done to keep the save fast and
 /// reliable.
-const WillSaveTextDocumentWaitUntilRequest = struct {
-    const method = "textDocument/willSaveWaitUntil";
-    const @"type" = ManuallyTranslateValue;
+pub const WillSaveTextDocumentWaitUntilRequest = struct {
+    pub const method = "textDocument/willSaveWaitUntil";
+    pub const @"type" = ManuallyTranslateValue;
 };
-const DidChangeWatchedFilesClientCapabilities = struct {
+pub const DidChangeWatchedFilesClientCapabilities = struct {
     /// Did change watched files notification supports dynamic registration. Please note
     /// that the current protocol doesn't support static configuration for file changes
     /// from the server side.
@@ -2185,18 +2138,18 @@ const DidChangeWatchedFilesClientCapabilities = struct {
 
 /// The watched files notification is sent from the client to the server when
 /// the client detects changes to file watched by the language client.
-const DidChangeWatchedFilesNotification = struct {
-    const @"type" = ManuallyTranslateValue;
+pub const DidChangeWatchedFilesNotification = struct {
+    pub const @"type" = ManuallyTranslateValue;
 };
 
 /// The watched files change notification's parameters.
-const DidChangeWatchedFilesParams = struct {
+pub const DidChangeWatchedFilesParams = struct {
     /// The actual file events.
     changes: []FileEvent,
 };
 
 /// The file event type
-const FileChangeType = enum(i64) {
+pub const FileChangeType = enum(i64) {
     Created = 1,
     Changed = 2,
     Deleted = 3,
@@ -2205,7 +2158,7 @@ const FileChangeType = enum(i64) {
 };
 
 /// An event describing a file change.
-const FileEvent = struct {
+pub const FileEvent = struct {
     /// The file's uri.
     uri: []const u8,
 
@@ -2214,11 +2167,11 @@ const FileEvent = struct {
 };
 
 /// Describe options to be used when registered for text document change events.
-const DidChangeWatchedFilesRegistrationOptions = struct {
+pub const DidChangeWatchedFilesRegistrationOptions = struct {
     /// The watchers to register.
     watchers: []FileSystemWatcher,
 };
-const FileSystemWatcher = struct {
+pub const FileSystemWatcher = struct {
     /// The  glob pattern to watch. Glob patterns can have the following syntax:
     /// - `*` to match one or more characters in a path segment
     /// - `?` to match on one character in a path segment
@@ -2233,7 +2186,7 @@ const FileSystemWatcher = struct {
     /// which is 7.
     kind: Undefinedable(i64),
 };
-const WatchKind = enum(i64) {
+pub const WatchKind = enum(i64) {
     Create = 1,
     Change = 2,
     Delete = 4,
@@ -2242,7 +2195,7 @@ const WatchKind = enum(i64) {
 };
 
 /// The publish diagnostic client capabilities.
-const PublishDiagnosticsClientCapabilities = struct {
+pub const PublishDiagnosticsClientCapabilities = struct {
     /// Whether the clients accepts diagnostics with related information.
     relatedInformation: Undefinedable(bool),
 
@@ -2267,7 +2220,7 @@ const PublishDiagnosticsClientCapabilities = struct {
 };
 
 /// The publish diagnostic notification's parameters.
-const PublishDiagnosticsParams = struct {
+pub const PublishDiagnosticsParams = struct {
     /// The URI for which diagnostic information is reported.
     uri: []const u8,
 
@@ -2280,12 +2233,12 @@ const PublishDiagnosticsParams = struct {
 
 /// Diagnostics notification are sent from the server to the client to signal
 /// results of validation runs.
-const PublishDiagnosticsNotification = struct {
-    const @"type" = ManuallyTranslateValue;
+pub const PublishDiagnosticsNotification = struct {
+    pub const @"type" = ManuallyTranslateValue;
 };
 
 /// Completion client capabilities
-const CompletionClientCapabilities = struct {
+pub const CompletionClientCapabilities = struct {
     /// Whether completion supports dynamic registration.
     dynamicRegistration: Undefinedable(bool),
 
@@ -2333,7 +2286,7 @@ const CompletionClientCapabilities = struct {
         /// a resolve call.
         tagSupport: Undefinedable(struct {
             /// The tags supported by the client.
-            valueSet: []1,
+            valueSet: []CompletionItemTag,
         }),
     }),
     completionItemKind: Undefinedable(struct {
@@ -2355,7 +2308,7 @@ const CompletionClientCapabilities = struct {
 };
 
 /// How a completion was triggered
-const CompletionTriggerKind = enum(i64) {
+pub const CompletionTriggerKind = enum(i64) {
     Invoked = 1,
     TriggerCharacter = 2,
     TriggerForIncompleteCompletions = 3,
@@ -2364,7 +2317,7 @@ const CompletionTriggerKind = enum(i64) {
 };
 
 /// Contains additional information about the context in which a completion request is triggered.
-const CompletionContext = struct {
+pub const CompletionContext = struct {
     /// How the completion was triggered.
     triggerKind: CompletionTriggerKind,
 
@@ -2374,7 +2327,7 @@ const CompletionContext = struct {
 };
 
 /// Completion parameters
-const CompletionParams = struct {
+pub const CompletionParams = struct {
     /// The completion context. This is only available it the client specifies
     /// to send this using the client capability `textDocument.completion.contextSupport === true`
     context: Undefinedable(CompletionContext),
@@ -2394,7 +2347,7 @@ const CompletionParams = struct {
 };
 
 /// Completion options.
-const CompletionOptions = struct {
+pub const CompletionOptions = struct {
     /// Most tools trigger completion request automatically without explicitly requesting
     /// it using a keyboard shortcut (e.g. Ctrl+Space). Typically they do so when the user
     /// starts to type an identifier. For example if the user types `c` in a JavaScript file
@@ -2414,7 +2367,7 @@ const CompletionOptions = struct {
 };
 
 /// Registration options for a [CompletionRequest](#CompletionRequest).
-const CompletionRegistrationOptions = struct {
+pub const CompletionRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
@@ -2441,19 +2394,19 @@ const CompletionRegistrationOptions = struct {
 /// parameter is of type [TextDocumentPosition](#TextDocumentPosition) the response
 /// is of type [CompletionItem[]](#CompletionItem) or [CompletionList](#CompletionList)
 /// or a Thenable that resolves to such.
-const CompletionRequest = struct {
-    const method = "textDocument/completion";
-    const @"type" = ManuallyTranslateValue;
+pub const CompletionRequest = struct {
+    pub const method = "textDocument/completion";
+    pub const @"type" = ManuallyTranslateValue;
 };
 
 /// Request to resolve additional information for a given completion item.The request's
 /// parameter is of type [CompletionItem](#CompletionItem) the response
 /// is of type [CompletionItem](#CompletionItem) or a Thenable that resolves to such.
-const CompletionResolveRequest = struct {
-    const method = "completionItem/resolve";
-    const @"type" = ManuallyTranslateValue;
+pub const CompletionResolveRequest = struct {
+    pub const method = "completionItem/resolve";
+    pub const @"type" = ManuallyTranslateValue;
 };
-const HoverClientCapabilities = struct {
+pub const HoverClientCapabilities = struct {
     /// Whether hover supports dynamic registration.
     dynamicRegistration: Undefinedable(bool),
 
@@ -2463,12 +2416,12 @@ const HoverClientCapabilities = struct {
 };
 
 /// Hover options.
-const HoverOptions = struct {
+pub const HoverOptions = struct {
     workDoneProgress: Undefinedable(bool),
 };
 
 /// Parameters for a [HoverRequest](#HoverRequest).
-const HoverParams = struct {
+pub const HoverParams = struct {
     /// The text document.
     textDocument: TextDocumentIdentifier,
 
@@ -2480,7 +2433,7 @@ const HoverParams = struct {
 };
 
 /// Registration options for a [HoverRequest](#HoverRequest).
-const HoverRegistrationOptions = struct {
+pub const HoverRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
@@ -2490,13 +2443,13 @@ const HoverRegistrationOptions = struct {
 /// Request to request hover information at a given text document position. The request's
 /// parameter is of type [TextDocumentPosition](#TextDocumentPosition) the response is of
 /// type [Hover](#Hover) or a Thenable that resolves to such.
-const HoverRequest = struct {
-    const method = "textDocument/hover";
-    const @"type" = ManuallyTranslateValue;
+pub const HoverRequest = struct {
+    pub const method = "textDocument/hover";
+    pub const @"type" = ManuallyTranslateValue;
 };
 
 /// Client Capabilities for a [SignatureHelpRequest](#SignatureHelpRequest).
-const SignatureHelpClientCapabilities = struct {
+pub const SignatureHelpClientCapabilities = struct {
     /// Whether signature help supports dynamic registration.
     dynamicRegistration: Undefinedable(bool),
 
@@ -2527,7 +2480,7 @@ const SignatureHelpClientCapabilities = struct {
 };
 
 /// Server Capabilities for a [SignatureHelpRequest](#SignatureHelpRequest).
-const SignatureHelpOptions = struct {
+pub const SignatureHelpOptions = struct {
     /// List of characters that trigger signature help.
     triggerCharacters: Undefinedable([][]const u8),
 
@@ -2537,7 +2490,7 @@ const SignatureHelpOptions = struct {
 };
 
 /// How a signature help was triggered.
-const SignatureHelpTriggerKind = enum(i64) {
+pub const SignatureHelpTriggerKind = enum(i64) {
     Invoked = 1,
     TriggerCharacter = 2,
     ContentChange = 3,
@@ -2546,7 +2499,7 @@ const SignatureHelpTriggerKind = enum(i64) {
 };
 
 /// Additional information about the context in which a signature help request was triggered.
-const SignatureHelpContext = struct {
+pub const SignatureHelpContext = struct {
     /// Action that caused signature help to be triggered.
     triggerKind: SignatureHelpTriggerKind,
 
@@ -2561,7 +2514,7 @@ const SignatureHelpContext = struct {
 };
 
 /// Parameters for a [SignatureHelpRequest](#SignatureHelpRequest).
-const SignatureHelpParams = struct {
+pub const SignatureHelpParams = struct {
     /// The signature help context. This is only available if the client specifies
     /// to send this using the client capability `textDocument.signatureHelp.contextSupport === true`
     context: Undefinedable(SignatureHelpContext),
@@ -2577,7 +2530,7 @@ const SignatureHelpParams = struct {
 };
 
 /// Registration options for a [SignatureHelpRequest](#SignatureHelpRequest).
-const SignatureHelpRegistrationOptions = struct {
+pub const SignatureHelpRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
@@ -2589,13 +2542,13 @@ const SignatureHelpRegistrationOptions = struct {
     retriggerCharacters: Undefinedable([][]const u8),
     workDoneProgress: Undefinedable(bool),
 };
-const SignatureHelpRequest = struct {
-    const method = "textDocument/signatureHelp";
-    const @"type" = ManuallyTranslateValue;
+pub const SignatureHelpRequest = struct {
+    pub const method = "textDocument/signatureHelp";
+    pub const @"type" = ManuallyTranslateValue;
 };
 
 /// Client Capabilities for a [DefinitionRequest](#DefinitionRequest).
-const DefinitionClientCapabilities = struct {
+pub const DefinitionClientCapabilities = struct {
     /// Whether definition supports dynamic registration.
     dynamicRegistration: Undefinedable(bool),
 
@@ -2604,12 +2557,12 @@ const DefinitionClientCapabilities = struct {
 };
 
 /// Server Capabilities for a [DefinitionRequest](#DefinitionRequest).
-const DefinitionOptions = struct {
+pub const DefinitionOptions = struct {
     workDoneProgress: Undefinedable(bool),
 };
 
 /// Parameters for a [DefinitionRequest](#DefinitionRequest).
-const DefinitionParams = struct {
+pub const DefinitionParams = struct {
     /// The text document.
     textDocument: TextDocumentIdentifier,
 
@@ -2625,7 +2578,7 @@ const DefinitionParams = struct {
 };
 
 /// Registration options for a [DefinitionRequest](#DefinitionRequest).
-const DefinitionRegistrationOptions = struct {
+pub const DefinitionRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
@@ -2637,19 +2590,19 @@ const DefinitionRegistrationOptions = struct {
 /// (#TextDocumentPosition) the response is of either type [Definition](#Definition)
 /// or a typed array of [DefinitionLink](#DefinitionLink) or a Thenable that resolves
 /// to such.
-const DefinitionRequest = struct {
-    const method = "textDocument/definition";
-    const @"type" = ManuallyTranslateValue;
+pub const DefinitionRequest = struct {
+    pub const method = "textDocument/definition";
+    pub const @"type" = ManuallyTranslateValue;
 };
 
 /// Client Capabilities for a [ReferencesRequest](#ReferencesRequest).
-const ReferenceClientCapabilities = struct {
+pub const ReferenceClientCapabilities = struct {
     /// Whether references supports dynamic registration.
     dynamicRegistration: Undefinedable(bool),
 };
 
 /// Parameters for a [ReferencesRequest](#ReferencesRequest).
-const ReferenceParams = struct {
+pub const ReferenceParams = struct {
     context: ReferenceContext,
 
     /// The text document.
@@ -2667,12 +2620,12 @@ const ReferenceParams = struct {
 };
 
 /// Reference options.
-const ReferenceOptions = struct {
+pub const ReferenceOptions = struct {
     workDoneProgress: Undefinedable(bool),
 };
 
 /// Registration options for a [ReferencesRequest](#ReferencesRequest).
-const ReferenceRegistrationOptions = struct {
+pub const ReferenceRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
@@ -2683,19 +2636,19 @@ const ReferenceRegistrationOptions = struct {
 /// by the given text document position. The request's parameter is of
 /// type [ReferenceParams](#ReferenceParams) the response is of type
 /// [Location[]](#Location) or a Thenable that resolves to such.
-const ReferencesRequest = struct {
-    const method = "textDocument/references";
-    const @"type" = ManuallyTranslateValue;
+pub const ReferencesRequest = struct {
+    pub const method = "textDocument/references";
+    pub const @"type" = ManuallyTranslateValue;
 };
 
 /// Client Capabilities for a [DocumentHighlightRequest](#DocumentHighlightRequest).
-const DocumentHighlightClientCapabilities = struct {
+pub const DocumentHighlightClientCapabilities = struct {
     /// Whether document highlight supports dynamic registration.
     dynamicRegistration: Undefinedable(bool),
 };
 
 /// Parameters for a [DocumentHighlightRequest](#DocumentHighlightRequest).
-const DocumentHighlightParams = struct {
+pub const DocumentHighlightParams = struct {
     /// The text document.
     textDocument: TextDocumentIdentifier,
 
@@ -2711,12 +2664,12 @@ const DocumentHighlightParams = struct {
 };
 
 /// Provider options for a [DocumentHighlightRequest](#DocumentHighlightRequest).
-const DocumentHighlightOptions = struct {
+pub const DocumentHighlightOptions = struct {
     workDoneProgress: Undefinedable(bool),
 };
 
 /// Registration options for a [DocumentHighlightRequest](#DocumentHighlightRequest).
-const DocumentHighlightRegistrationOptions = struct {
+pub const DocumentHighlightRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
@@ -2727,13 +2680,13 @@ const DocumentHighlightRegistrationOptions = struct {
 /// text document position. The request's parameter is of type [TextDocumentPosition]
 /// (#TextDocumentPosition) the request response is of type [DocumentHighlight[]]
 /// (#DocumentHighlight) or a Thenable that resolves to such.
-const DocumentHighlightRequest = struct {
-    const method = "textDocument/documentHighlight";
-    const @"type" = ManuallyTranslateValue;
+pub const DocumentHighlightRequest = struct {
+    pub const method = "textDocument/documentHighlight";
+    pub const @"type" = ManuallyTranslateValue;
 };
 
 /// Client Capabilities for a [DocumentSymbolRequest](#DocumentSymbolRequest).
-const DocumentSymbolClientCapabilities = struct {
+pub const DocumentSymbolClientCapabilities = struct {
     /// Whether document symbol supports dynamic registration.
     dynamicRegistration: Undefinedable(bool),
 
@@ -2754,7 +2707,7 @@ const DocumentSymbolClientCapabilities = struct {
     /// Clients supporting tags have to handle unknown tags gracefully.
     tagSupport: Undefinedable(struct {
         /// The tags supported by the client.
-        valueSet: []1,
+        valueSet: []SymbolTag,
     }),
 
     /// The client supports an additional label presented in the UI when
@@ -2763,7 +2716,7 @@ const DocumentSymbolClientCapabilities = struct {
 };
 
 /// Parameters for a [DocumentSymbolRequest](#DocumentSymbolRequest).
-const DocumentSymbolParams = struct {
+pub const DocumentSymbolParams = struct {
     /// The text document.
     textDocument: TextDocumentIdentifier,
 
@@ -2776,7 +2729,7 @@ const DocumentSymbolParams = struct {
 };
 
 /// Provider options for a [DocumentSymbolRequest](#DocumentSymbolRequest).
-const DocumentSymbolOptions = struct {
+pub const DocumentSymbolOptions = struct {
     /// A human-readable string that is shown when multiple outlines trees
     /// are shown for the same document.
     label: Undefinedable([]const u8),
@@ -2784,7 +2737,7 @@ const DocumentSymbolOptions = struct {
 };
 
 /// Registration options for a [DocumentSymbolRequest](#DocumentSymbolRequest).
-const DocumentSymbolRegistrationOptions = struct {
+pub const DocumentSymbolRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
@@ -2799,13 +2752,13 @@ const DocumentSymbolRegistrationOptions = struct {
 /// parameter is of type [TextDocumentIdentifier](#TextDocumentIdentifier) the
 /// response is of type [SymbolInformation[]](#SymbolInformation) or a Thenable
 /// that resolves to such.
-const DocumentSymbolRequest = struct {
-    const method = "textDocument/documentSymbol";
-    const @"type" = ManuallyTranslateValue;
+pub const DocumentSymbolRequest = struct {
+    pub const method = "textDocument/documentSymbol";
+    pub const @"type" = ManuallyTranslateValue;
 };
 
 /// The Client Capabilities of a [CodeActionRequest](#CodeActionRequest).
-const CodeActionClientCapabilities = struct {
+pub const CodeActionClientCapabilities = struct {
     /// Whether code action supports dynamic registration.
     dynamicRegistration: Undefinedable(bool),
 
@@ -2851,7 +2804,7 @@ const CodeActionClientCapabilities = struct {
 };
 
 /// The parameters of a [CodeActionRequest](#CodeActionRequest).
-const CodeActionParams = struct {
+pub const CodeActionParams = struct {
     /// The document in which the command was invoked.
     textDocument: TextDocumentIdentifier,
 
@@ -2870,7 +2823,7 @@ const CodeActionParams = struct {
 };
 
 /// Provider options for a [CodeActionRequest](#CodeActionRequest).
-const CodeActionOptions = struct {
+pub const CodeActionOptions = struct {
     /// CodeActionKinds that this server may return.
     codeActionKinds: Undefinedable([][]const u8),
 
@@ -2881,7 +2834,7 @@ const CodeActionOptions = struct {
 };
 
 /// Registration options for a [CodeActionRequest](#CodeActionRequest).
-const CodeActionRegistrationOptions = struct {
+pub const CodeActionRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
@@ -2896,21 +2849,21 @@ const CodeActionRegistrationOptions = struct {
 };
 
 /// A request to provide commands for the given text document and range.
-const CodeActionRequest = struct {
-    const method = "textDocument/codeAction";
-    const @"type" = ManuallyTranslateValue;
+pub const CodeActionRequest = struct {
+    pub const method = "textDocument/codeAction";
+    pub const @"type" = ManuallyTranslateValue;
 };
 
 /// Request to resolve additional information for a given code action.The request's
 /// parameter is of type [CodeAction](#CodeAction) the response
 /// is of type [CodeAction](#CodeAction) or a Thenable that resolves to such.
-const CodeActionResolveRequest = struct {
-    const method = "codeAction/resolve";
-    const @"type" = ManuallyTranslateValue;
+pub const CodeActionResolveRequest = struct {
+    pub const method = "codeAction/resolve";
+    pub const @"type" = ManuallyTranslateValue;
 };
 
 /// Client capabilities for a [WorkspaceSymbolRequest](#WorkspaceSymbolRequest).
-const WorkspaceSymbolClientCapabilities = struct {
+pub const WorkspaceSymbolClientCapabilities = struct {
     /// Symbol request supports dynamic registration.
     dynamicRegistration: Undefinedable(bool),
 
@@ -2927,12 +2880,12 @@ const WorkspaceSymbolClientCapabilities = struct {
     /// Clients supporting tags have to handle unknown tags gracefully.
     tagSupport: Undefinedable(struct {
         /// The tags supported by the client.
-        valueSet: []1,
+        valueSet: []SymbolTag,
     }),
 };
 
 /// The parameters of a [WorkspaceSymbolRequest](#WorkspaceSymbolRequest).
-const WorkspaceSymbolParams = struct {
+pub const WorkspaceSymbolParams = struct {
     /// A query string to filter symbols by. Clients may send an empty
     /// string here to request all symbols.
     query: []const u8,
@@ -2946,12 +2899,12 @@ const WorkspaceSymbolParams = struct {
 };
 
 /// Server capabilities for a [WorkspaceSymbolRequest](#WorkspaceSymbolRequest).
-const WorkspaceSymbolOptions = struct {
+pub const WorkspaceSymbolOptions = struct {
     workDoneProgress: Undefinedable(bool),
 };
 
 /// Registration options for a [WorkspaceSymbolRequest](#WorkspaceSymbolRequest).
-const WorkspaceSymbolRegistrationOptions = struct {
+pub const WorkspaceSymbolRegistrationOptions = struct {
     workDoneProgress: Undefinedable(bool),
 };
 
@@ -2959,24 +2912,24 @@ const WorkspaceSymbolRegistrationOptions = struct {
 /// by the [WorkspaceSymbolParams](#WorkspaceSymbolParams). The response is
 /// of type [SymbolInformation[]](#SymbolInformation) or a Thenable that
 /// resolves to such.
-const WorkspaceSymbolRequest = struct {
-    const method = "workspace/symbol";
-    const @"type" = ManuallyTranslateValue;
+pub const WorkspaceSymbolRequest = struct {
+    pub const method = "workspace/symbol";
+    pub const @"type" = ManuallyTranslateValue;
 };
 
 /// The client capabilities  of a [CodeLensRequest](#CodeLensRequest).
-const CodeLensClientCapabilities = struct {
+pub const CodeLensClientCapabilities = struct {
     /// Whether code lens supports dynamic registration.
     dynamicRegistration: Undefinedable(bool),
 };
-const CodeLensWorkspaceClientCapabilities = struct {
+pub const CodeLensWorkspaceClientCapabilities = struct {
     /// Whether the client implementation supports a refresh request sent from the
     /// server to the client.
     refreshSupport: Undefinedable(bool),
 };
 
 /// The parameters of a [CodeLensRequest](#CodeLensRequest).
-const CodeLensParams = struct {
+pub const CodeLensParams = struct {
     /// The document to request code lens for.
     textDocument: TextDocumentIdentifier,
 
@@ -2989,14 +2942,14 @@ const CodeLensParams = struct {
 };
 
 /// Code Lens provider options of a [CodeLensRequest](#CodeLensRequest).
-const CodeLensOptions = struct {
+pub const CodeLensOptions = struct {
     /// Code lens has a resolve provider as well.
     resolveProvider: Undefinedable(bool),
     workDoneProgress: Undefinedable(bool),
 };
 
 /// Registration options for a [CodeLensRequest](#CodeLensRequest).
-const CodeLensRegistrationOptions = struct {
+pub const CodeLensRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
@@ -3007,25 +2960,25 @@ const CodeLensRegistrationOptions = struct {
 };
 
 /// A request to provide code lens for the given text document.
-const CodeLensRequest = struct {
-    const method = "textDocument/codeLens";
-    const @"type" = ManuallyTranslateValue;
+pub const CodeLensRequest = struct {
+    pub const method = "textDocument/codeLens";
+    pub const @"type" = ManuallyTranslateValue;
 };
 
 /// A request to resolve a command for a given code lens.
-const CodeLensResolveRequest = struct {
-    const method = "codeLens/resolve";
-    const @"type" = ManuallyTranslateValue;
+pub const CodeLensResolveRequest = struct {
+    pub const method = "codeLens/resolve";
+    pub const @"type" = ManuallyTranslateValue;
 };
 
 /// A request to refresh all code actions
-const CodeLensRefreshRequest = struct {
-    const method = ManuallyTranslateValue;
-    const @"type" = ManuallyTranslateValue;
+pub const CodeLensRefreshRequest = struct {
+    pub const method = ManuallyTranslateValue;
+    pub const @"type" = ManuallyTranslateValue;
 };
 
 /// The client capabilities of a [DocumentLinkRequest](#DocumentLinkRequest).
-const DocumentLinkClientCapabilities = struct {
+pub const DocumentLinkClientCapabilities = struct {
     /// Whether document link supports dynamic registration.
     dynamicRegistration: Undefinedable(bool),
 
@@ -3034,7 +2987,7 @@ const DocumentLinkClientCapabilities = struct {
 };
 
 /// The parameters of a [DocumentLinkRequest](#DocumentLinkRequest).
-const DocumentLinkParams = struct {
+pub const DocumentLinkParams = struct {
     /// The document to provide document links for.
     textDocument: TextDocumentIdentifier,
 
@@ -3047,14 +3000,14 @@ const DocumentLinkParams = struct {
 };
 
 /// Provider options for a [DocumentLinkRequest](#DocumentLinkRequest).
-const DocumentLinkOptions = struct {
+pub const DocumentLinkOptions = struct {
     /// Document links have a resolve provider as well.
     resolveProvider: Undefinedable(bool),
     workDoneProgress: Undefinedable(bool),
 };
 
 /// Registration options for a [DocumentLinkRequest](#DocumentLinkRequest).
-const DocumentLinkRegistrationOptions = struct {
+pub const DocumentLinkRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
@@ -3065,27 +3018,27 @@ const DocumentLinkRegistrationOptions = struct {
 };
 
 /// A request to provide document links
-const DocumentLinkRequest = struct {
-    const method = "textDocument/documentLink";
-    const @"type" = ManuallyTranslateValue;
+pub const DocumentLinkRequest = struct {
+    pub const method = "textDocument/documentLink";
+    pub const @"type" = ManuallyTranslateValue;
 };
 
 /// Request to resolve additional information for a given document link. The request's
 /// parameter is of type [DocumentLink](#DocumentLink) the response
 /// is of type [DocumentLink](#DocumentLink) or a Thenable that resolves to such.
-const DocumentLinkResolveRequest = struct {
-    const method = "documentLink/resolve";
-    const @"type" = ManuallyTranslateValue;
+pub const DocumentLinkResolveRequest = struct {
+    pub const method = "documentLink/resolve";
+    pub const @"type" = ManuallyTranslateValue;
 };
 
 /// Client capabilities of a [DocumentFormattingRequest](#DocumentFormattingRequest).
-const DocumentFormattingClientCapabilities = struct {
+pub const DocumentFormattingClientCapabilities = struct {
     /// Whether formatting supports dynamic registration.
     dynamicRegistration: Undefinedable(bool),
 };
 
 /// The parameters of a [DocumentFormattingRequest](#DocumentFormattingRequest).
-const DocumentFormattingParams = struct {
+pub const DocumentFormattingParams = struct {
     /// The document to format.
     textDocument: TextDocumentIdentifier,
 
@@ -3097,12 +3050,12 @@ const DocumentFormattingParams = struct {
 };
 
 /// Provider options for a [DocumentFormattingRequest](#DocumentFormattingRequest).
-const DocumentFormattingOptions = struct {
+pub const DocumentFormattingOptions = struct {
     workDoneProgress: Undefinedable(bool),
 };
 
 /// Registration options for a [DocumentFormattingRequest](#DocumentFormattingRequest).
-const DocumentFormattingRegistrationOptions = struct {
+pub const DocumentFormattingRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
@@ -3110,19 +3063,19 @@ const DocumentFormattingRegistrationOptions = struct {
 };
 
 /// A request to to format a whole document.
-const DocumentFormattingRequest = struct {
-    const method = "textDocument/formatting";
-    const @"type" = ManuallyTranslateValue;
+pub const DocumentFormattingRequest = struct {
+    pub const method = "textDocument/formatting";
+    pub const @"type" = ManuallyTranslateValue;
 };
 
 /// Client capabilities of a [DocumentRangeFormattingRequest](#DocumentRangeFormattingRequest).
-const DocumentRangeFormattingClientCapabilities = struct {
+pub const DocumentRangeFormattingClientCapabilities = struct {
     /// Whether range formatting supports dynamic registration.
     dynamicRegistration: Undefinedable(bool),
 };
 
 /// The parameters of a [DocumentRangeFormattingRequest](#DocumentRangeFormattingRequest).
-const DocumentRangeFormattingParams = struct {
+pub const DocumentRangeFormattingParams = struct {
     /// The document to format.
     textDocument: TextDocumentIdentifier,
 
@@ -3137,12 +3090,12 @@ const DocumentRangeFormattingParams = struct {
 };
 
 /// Provider options for a [DocumentRangeFormattingRequest](#DocumentRangeFormattingRequest).
-const DocumentRangeFormattingOptions = struct {
+pub const DocumentRangeFormattingOptions = struct {
     workDoneProgress: Undefinedable(bool),
 };
 
 /// Registration options for a [DocumentRangeFormattingRequest](#DocumentRangeFormattingRequest).
-const DocumentRangeFormattingRegistrationOptions = struct {
+pub const DocumentRangeFormattingRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
@@ -3150,19 +3103,19 @@ const DocumentRangeFormattingRegistrationOptions = struct {
 };
 
 /// A request to to format a range in a document.
-const DocumentRangeFormattingRequest = struct {
-    const method = "textDocument/rangeFormatting";
-    const @"type" = ManuallyTranslateValue;
+pub const DocumentRangeFormattingRequest = struct {
+    pub const method = "textDocument/rangeFormatting";
+    pub const @"type" = ManuallyTranslateValue;
 };
 
 /// Client capabilities of a [DocumentOnTypeFormattingRequest](#DocumentOnTypeFormattingRequest).
-const DocumentOnTypeFormattingClientCapabilities = struct {
+pub const DocumentOnTypeFormattingClientCapabilities = struct {
     /// Whether on type formatting supports dynamic registration.
     dynamicRegistration: Undefinedable(bool),
 };
 
 /// The parameters of a [DocumentOnTypeFormattingRequest](#DocumentOnTypeFormattingRequest).
-const DocumentOnTypeFormattingParams = struct {
+pub const DocumentOnTypeFormattingParams = struct {
     /// The document to format.
     textDocument: TextDocumentIdentifier,
 
@@ -3177,7 +3130,7 @@ const DocumentOnTypeFormattingParams = struct {
 };
 
 /// Provider options for a [DocumentOnTypeFormattingRequest](#DocumentOnTypeFormattingRequest).
-const DocumentOnTypeFormattingOptions = struct {
+pub const DocumentOnTypeFormattingOptions = struct {
     /// A character on which formatting should be triggered, like `}`.
     firstTriggerCharacter: []const u8,
 
@@ -3186,7 +3139,7 @@ const DocumentOnTypeFormattingOptions = struct {
 };
 
 /// Registration options for a [DocumentOnTypeFormattingRequest](#DocumentOnTypeFormattingRequest).
-const DocumentOnTypeFormattingRegistrationOptions = struct {
+pub const DocumentOnTypeFormattingRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
@@ -3199,16 +3152,16 @@ const DocumentOnTypeFormattingRegistrationOptions = struct {
 };
 
 /// A request to format a document on type.
-const DocumentOnTypeFormattingRequest = struct {
-    const method = "textDocument/onTypeFormatting";
-    const @"type" = ManuallyTranslateValue;
+pub const DocumentOnTypeFormattingRequest = struct {
+    pub const method = "textDocument/onTypeFormatting";
+    pub const @"type" = ManuallyTranslateValue;
 };
-const PrepareSupportDefaultBehavior = enum(i64) {
+pub const PrepareSupportDefaultBehavior = enum(i64) {
     Identifier = 1,
 
     usingnamespace IntBackedEnumStringify(@This());
 };
-const RenameClientCapabilities = struct {
+pub const RenameClientCapabilities = struct {
     /// Whether rename supports dynamic registration.
     dynamicRegistration: Undefinedable(bool),
 
@@ -3228,7 +3181,7 @@ const RenameClientCapabilities = struct {
 };
 
 /// The parameters of a [RenameRequest](#RenameRequest).
-const RenameParams = struct {
+pub const RenameParams = struct {
     /// The document to rename.
     textDocument: TextDocumentIdentifier,
 
@@ -3245,14 +3198,14 @@ const RenameParams = struct {
 };
 
 /// Provider options for a [RenameRequest](#RenameRequest).
-const RenameOptions = struct {
+pub const RenameOptions = struct {
     /// Renames should be checked and tested before being executed.
     prepareProvider: Undefinedable(bool),
     workDoneProgress: Undefinedable(bool),
 };
 
 /// Registration options for a [RenameRequest](#RenameRequest).
-const RenameRegistrationOptions = struct {
+pub const RenameRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
@@ -3263,11 +3216,11 @@ const RenameRegistrationOptions = struct {
 };
 
 /// A request to rename a symbol.
-const RenameRequest = struct {
-    const method = "textDocument/rename";
-    const @"type" = ManuallyTranslateValue;
+pub const RenameRequest = struct {
+    pub const method = "textDocument/rename";
+    pub const @"type" = ManuallyTranslateValue;
 };
-const PrepareRenameParams = struct {
+pub const PrepareRenameParams = struct {
     /// The text document.
     textDocument: TextDocumentIdentifier,
 
@@ -3279,19 +3232,19 @@ const PrepareRenameParams = struct {
 };
 
 /// A request to test and perform the setup necessary for a rename.
-const PrepareRenameRequest = struct {
-    const method = "textDocument/prepareRename";
-    const @"type" = ManuallyTranslateValue;
+pub const PrepareRenameRequest = struct {
+    pub const method = "textDocument/prepareRename";
+    pub const @"type" = ManuallyTranslateValue;
 };
 
 /// The client capabilities of a [ExecuteCommandRequest](#ExecuteCommandRequest).
-const ExecuteCommandClientCapabilities = struct {
+pub const ExecuteCommandClientCapabilities = struct {
     /// Execute command supports dynamic registration.
     dynamicRegistration: Undefinedable(bool),
 };
 
 /// The parameters of a [ExecuteCommandRequest](#ExecuteCommandRequest).
-const ExecuteCommandParams = struct {
+pub const ExecuteCommandParams = struct {
     /// The identifier of the actual command handler.
     command: []const u8,
 
@@ -3303,14 +3256,14 @@ const ExecuteCommandParams = struct {
 };
 
 /// The server capabilities of a [ExecuteCommandRequest](#ExecuteCommandRequest).
-const ExecuteCommandOptions = struct {
+pub const ExecuteCommandOptions = struct {
     /// The commands to be executed on the server
     commands: [][]const u8,
     workDoneProgress: Undefinedable(bool),
 };
 
 /// Registration options for a [ExecuteCommandRequest](#ExecuteCommandRequest).
-const ExecuteCommandRegistrationOptions = struct {
+pub const ExecuteCommandRegistrationOptions = struct {
     /// The commands to be executed on the server
     commands: [][]const u8,
     workDoneProgress: Undefinedable(bool),
@@ -3318,10 +3271,10 @@ const ExecuteCommandRegistrationOptions = struct {
 
 /// A request send from the client to the server to execute a command. The request might return
 /// a workspace edit which the client will apply to the workspace.
-const ExecuteCommandRequest = struct {
-    const @"type" = ManuallyTranslateValue;
+pub const ExecuteCommandRequest = struct {
+    pub const @"type" = ManuallyTranslateValue;
 };
-const WorkspaceEditClientCapabilities = struct {
+pub const WorkspaceEditClientCapabilities = struct {
     /// The client supports versioned document changes in `WorkspaceEdit`s
     documentChanges: Undefinedable(bool),
 
@@ -3351,7 +3304,7 @@ const WorkspaceEditClientCapabilities = struct {
 };
 
 /// The parameters passed via a apply workspace edit request.
-const ApplyWorkspaceEditParams = struct {
+pub const ApplyWorkspaceEditParams = struct {
     /// An optional label of the workspace edit. This label is
     /// presented in the user interface for example on an undo
     /// stack to undo the workspace edit.
@@ -3362,7 +3315,7 @@ const ApplyWorkspaceEditParams = struct {
 };
 
 /// A response returned from the apply workspace edit request.
-const ApplyWorkspaceEditResponse = struct {
+pub const ApplyWorkspaceEditResponse = struct {
     /// Indicates whether the edit was applied or not.
     applied: bool,
 
@@ -3378,20 +3331,20 @@ const ApplyWorkspaceEditResponse = struct {
 };
 
 /// A request sent from the server to the client to modified certain resources.
-const ApplyWorkspaceEditRequest = struct {
-    const @"type" = ManuallyTranslateValue;
+pub const ApplyWorkspaceEditRequest = struct {
+    pub const @"type" = ManuallyTranslateValue;
 };
 
 /// A request to resolve the implementation locations of a symbol at a given text
 /// document position. The request's parameter is of type [TextDocumentPositioParams]
 /// (#TextDocumentPositionParams) the response is of type [Definition](#Definition) or a
 /// Thenable that resolves to such.
-const ImplementationRequest = struct {
-    const method = "textDocument/implementation";
-    const @"type" = ManuallyTranslateValue;
-    const HandlerSignature = RequestHandler;
+pub const ImplementationRequest = struct {
+    pub const method = "textDocument/implementation";
+    pub const @"type" = ManuallyTranslateValue;
+    pub const HandlerSignature = RequestHandler;
 };
-const ImplementationParams = struct {
+pub const ImplementationParams = struct {
     /// The text document.
     textDocument: TextDocumentIdentifier,
 
@@ -3405,7 +3358,7 @@ const ImplementationParams = struct {
     /// the client.
     partialResultToken: Undefinedable(ProgressToken),
 };
-const ImplementationRegistrationOptions = struct {
+pub const ImplementationRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
@@ -3415,7 +3368,7 @@ const ImplementationRegistrationOptions = struct {
     /// the request again. See also Registration#id.
     id: Undefinedable([]const u8),
 };
-const ImplementationOptions = struct {
+pub const ImplementationOptions = struct {
     workDoneProgress: Undefinedable(bool),
 };
 
@@ -3423,12 +3376,12 @@ const ImplementationOptions = struct {
 /// document position. The request's parameter is of type [TextDocumentPositioParams]
 /// (#TextDocumentPositionParams) the response is of type [Definition](#Definition) or a
 /// Thenable that resolves to such.
-const TypeDefinitionRequest = struct {
-    const method = "textDocument/typeDefinition";
-    const @"type" = ManuallyTranslateValue;
-    const HandlerSignature = RequestHandler;
+pub const TypeDefinitionRequest = struct {
+    pub const method = "textDocument/typeDefinition";
+    pub const @"type" = ManuallyTranslateValue;
+    pub const HandlerSignature = RequestHandler;
 };
-const TypeDefinitionParams = struct {
+pub const TypeDefinitionParams = struct {
     /// The text document.
     textDocument: TextDocumentIdentifier,
 
@@ -3442,7 +3395,7 @@ const TypeDefinitionParams = struct {
     /// the client.
     partialResultToken: Undefinedable(ProgressToken),
 };
-const TypeDefinitionRegistrationOptions = struct {
+pub const TypeDefinitionRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
@@ -3452,29 +3405,29 @@ const TypeDefinitionRegistrationOptions = struct {
     /// the request again. See also Registration#id.
     id: Undefinedable([]const u8),
 };
-const TypeDefinitionOptions = struct {
+pub const TypeDefinitionOptions = struct {
     workDoneProgress: Undefinedable(bool),
 };
 
 /// The `workspace/workspaceFolders` is sent from the server to the client to fetch the open workspace folders.
-const WorkspaceFoldersRequest = struct {
-    const @"type" = ManuallyTranslateValue;
-    const HandlerSignature = RequestHandler0;
+pub const WorkspaceFoldersRequest = struct {
+    pub const @"type" = ManuallyTranslateValue;
+    pub const HandlerSignature = RequestHandler0;
 };
 
 /// The `workspace/didChangeWorkspaceFolders` notification is sent from the client to the server when the workspace
 /// folder configuration changes.
-const DidChangeWorkspaceFoldersNotification = struct {
-    const @"type" = ManuallyTranslateValue;
-    const HandlerSignature = NotificationHandler;
+pub const DidChangeWorkspaceFoldersNotification = struct {
+    pub const @"type" = ManuallyTranslateValue;
+    pub const HandlerSignature = NotificationHandler;
 };
 
 /// The parameters of a `workspace/didChangeWorkspaceFolders` notification.
-const DidChangeWorkspaceFoldersParams = struct {
+pub const DidChangeWorkspaceFoldersParams = struct {
     /// The actual workspace folder change event.
     event: WorkspaceFoldersChangeEvent,
 };
-const WorkspaceFolder = struct {
+pub const WorkspaceFolder = struct {
     /// The associated URI for this workspace folder.
     uri: []const u8,
 
@@ -3484,7 +3437,7 @@ const WorkspaceFolder = struct {
 };
 
 /// The workspace folder change event.
-const WorkspaceFoldersChangeEvent = struct {
+pub const WorkspaceFoldersChangeEvent = struct {
     /// The array of added workspace folders
     added: []WorkspaceFolder,
 
@@ -3494,16 +3447,16 @@ const WorkspaceFoldersChangeEvent = struct {
 
 /// The 'workspace/configuration' request is sent from the server to the client to fetch a certain
 /// configuration setting.
-const ConfigurationRequest = struct {
-    const @"type" = ManuallyTranslateValue;
-    const HandlerSignature = RequestHandler;
+pub const ConfigurationRequest = struct {
+    pub const @"type" = ManuallyTranslateValue;
+    pub const HandlerSignature = RequestHandler;
 };
 
 /// The parameters of a configuration request.
-const ConfigurationParams = struct {
+pub const ConfigurationParams = struct {
     items: []ConfigurationItem,
 };
-const ConfigurationItem = struct {
+pub const ConfigurationItem = struct {
     /// The scope to get the configuration section for.
     scopeUri: Undefinedable([]const u8),
 
@@ -3515,26 +3468,26 @@ const ConfigurationItem = struct {
 /// parameter is of type [DocumentColorParams](#DocumentColorParams) the
 /// response is of type [ColorInformation[]](#ColorInformation) or a Thenable
 /// that resolves to such.
-const DocumentColorRequest = struct {
-    const method = "textDocument/documentColor";
-    const @"type" = ManuallyTranslateValue;
-    const HandlerSignature = RequestHandler;
+pub const DocumentColorRequest = struct {
+    pub const method = "textDocument/documentColor";
+    pub const @"type" = ManuallyTranslateValue;
+    pub const HandlerSignature = RequestHandler;
 };
 
 /// A request to list all presentation for a color. The request's
 /// parameter is of type [ColorPresentationParams](#ColorPresentationParams) the
 /// response is of type [ColorInformation[]](#ColorInformation) or a Thenable
 /// that resolves to such.
-const ColorPresentationRequest = struct {
-    const @"type" = ManuallyTranslateValue;
-    const HandlerSignature = RequestHandler;
+pub const ColorPresentationRequest = struct {
+    pub const @"type" = ManuallyTranslateValue;
+    pub const HandlerSignature = RequestHandler;
 };
-const DocumentColorOptions = struct {
+pub const DocumentColorOptions = struct {
     workDoneProgress: Undefinedable(bool),
 };
 
 /// Parameters for a [DocumentColorRequest](#DocumentColorRequest).
-const DocumentColorParams = struct {
+pub const DocumentColorParams = struct {
     /// The text document.
     textDocument: TextDocumentIdentifier,
 
@@ -3547,7 +3500,7 @@ const DocumentColorParams = struct {
 };
 
 /// Parameters for a [ColorPresentationRequest](#ColorPresentationRequest).
-const ColorPresentationParams = struct {
+pub const ColorPresentationParams = struct {
     /// The text document.
     textDocument: TextDocumentIdentifier,
 
@@ -3564,7 +3517,7 @@ const ColorPresentationParams = struct {
     /// the client.
     partialResultToken: Undefinedable(ProgressToken),
 };
-const DocumentColorRegistrationOptions = struct {
+pub const DocumentColorRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
@@ -3574,7 +3527,7 @@ const DocumentColorRegistrationOptions = struct {
     id: Undefinedable([]const u8),
     workDoneProgress: Undefinedable(bool),
 };
-const FoldingRangeClientCapabilities = struct {
+pub const FoldingRangeClientCapabilities = struct {
     /// Whether implementation supports dynamic registration for folding range providers. If this is set to `true`
     /// the client supports the new `FoldingRangeRegistrationOptions` return value for the corresponding server
     /// capability as well.
@@ -3588,7 +3541,7 @@ const FoldingRangeClientCapabilities = struct {
     /// ignore specified `startCharacter` and `endCharacter` properties in a FoldingRange.
     lineFoldingOnly: Undefinedable(bool),
 };
-const FoldingRangeOptions = struct {
+pub const FoldingRangeOptions = struct {
     workDoneProgress: Undefinedable(bool),
 };
 
@@ -3596,14 +3549,14 @@ const FoldingRangeOptions = struct {
 /// parameter is of type [FoldingRangeParams](#FoldingRangeParams), the
 /// response is of type [FoldingRangeList](#FoldingRangeList) or a Thenable
 /// that resolves to such.
-const FoldingRangeRequest = struct {
-    const method = "textDocument/foldingRange";
-    const @"type" = ManuallyTranslateValue;
-    const HandlerSignature = RequestHandler;
+pub const FoldingRangeRequest = struct {
+    pub const method = "textDocument/foldingRange";
+    pub const @"type" = ManuallyTranslateValue;
+    pub const HandlerSignature = RequestHandler;
 };
 
 /// Parameters for a [FoldingRangeRequest](#FoldingRangeRequest).
-const FoldingRangeParams = struct {
+pub const FoldingRangeParams = struct {
     /// The text document.
     textDocument: TextDocumentIdentifier,
 
@@ -3614,7 +3567,7 @@ const FoldingRangeParams = struct {
     /// the client.
     partialResultToken: Undefinedable(ProgressToken),
 };
-const FoldingRangeRegistrationOptions = struct {
+pub const FoldingRangeRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
@@ -3624,7 +3577,7 @@ const FoldingRangeRegistrationOptions = struct {
     /// the request again. See also Registration#id.
     id: Undefinedable([]const u8),
 };
-const DeclarationClientCapabilities = struct {
+pub const DeclarationClientCapabilities = struct {
     /// Whether declaration supports dynamic registration. If this is set to `true`
     /// the client supports the new `DeclarationRegistrationOptions` return value
     /// for the corresponding server capability as well.
@@ -3639,12 +3592,12 @@ const DeclarationClientCapabilities = struct {
 /// (#TextDocumentPositionParams) the response is of type [Declaration](#Declaration)
 /// or a typed array of [DeclarationLink](#DeclarationLink) or a Thenable that resolves
 /// to such.
-const DeclarationRequest = struct {
-    const method = "textDocument/declaration";
-    const @"type" = ManuallyTranslateValue;
-    const HandlerSignature = RequestHandler;
+pub const DeclarationRequest = struct {
+    pub const method = "textDocument/declaration";
+    pub const @"type" = ManuallyTranslateValue;
+    pub const HandlerSignature = RequestHandler;
 };
-const DeclarationParams = struct {
+pub const DeclarationParams = struct {
     /// The text document.
     textDocument: TextDocumentIdentifier,
 
@@ -3658,7 +3611,7 @@ const DeclarationParams = struct {
     /// the client.
     partialResultToken: Undefinedable(ProgressToken),
 };
-const DeclarationRegistrationOptions = struct {
+pub const DeclarationRegistrationOptions = struct {
     workDoneProgress: Undefinedable(bool),
 
     /// A document selector to identify the scope of the registration. If set to null
@@ -3669,21 +3622,21 @@ const DeclarationRegistrationOptions = struct {
     /// the request again. See also Registration#id.
     id: Undefinedable([]const u8),
 };
-const DeclarationOptions = struct {
+pub const DeclarationOptions = struct {
     workDoneProgress: Undefinedable(bool),
 };
-const SelectionRangeClientCapabilities = struct {
+pub const SelectionRangeClientCapabilities = struct {
     /// Whether implementation supports dynamic registration for selection range providers. If this is set to `true`
     /// the client supports the new `SelectionRangeRegistrationOptions` return value for the corresponding server
     /// capability as well.
     dynamicRegistration: Undefinedable(bool),
 };
-const SelectionRangeOptions = struct {
+pub const SelectionRangeOptions = struct {
     workDoneProgress: Undefinedable(bool),
 };
 
 /// A parameter literal used in selection range requests.
-const SelectionRangeParams = struct {
+pub const SelectionRangeParams = struct {
     /// The text document.
     textDocument: TextDocumentIdentifier,
 
@@ -3702,12 +3655,12 @@ const SelectionRangeParams = struct {
 /// parameter is of type [SelectionRangeParams](#SelectionRangeParams), the
 /// response is of type [SelectionRange[]](#SelectionRange[]) or a Thenable
 /// that resolves to such.
-const SelectionRangeRequest = struct {
-    const method = "textDocument/selectionRange";
-    const @"type" = ManuallyTranslateValue;
-    const HandlerSignature = RequestHandler;
+pub const SelectionRangeRequest = struct {
+    pub const method = "textDocument/selectionRange";
+    pub const @"type" = ManuallyTranslateValue;
+    pub const HandlerSignature = RequestHandler;
 };
-const SelectionRangeRegistrationOptions = struct {
+pub const SelectionRangeRegistrationOptions = struct {
     workDoneProgress: Undefinedable(bool),
 
     /// A document selector to identify the scope of the registration. If set to null
@@ -3718,7 +3671,7 @@ const SelectionRangeRegistrationOptions = struct {
     /// the request again. See also Registration#id.
     id: Undefinedable([]const u8),
 };
-const WorkDoneProgressBegin = struct {
+pub const WorkDoneProgressBegin = struct {
     comptime kind: []const u8 = "begin",
 
     /// Mandatory title of the progress operation. Used to briefly inform about
@@ -3739,7 +3692,7 @@ const WorkDoneProgressBegin = struct {
     /// to ignore the `percentage` value in subsequent in report notifications.
     percentage: Undefinedable(i64),
 };
-const WorkDoneProgressReport = struct {
+pub const WorkDoneProgressReport = struct {
     comptime kind: []const u8 = "report",
 
     /// Controls enablement state of a cancel button.
@@ -3754,36 +3707,36 @@ const WorkDoneProgressReport = struct {
     /// to ignore the `percentage` value in subsequent in report notifications.
     percentage: Undefinedable(i64),
 };
-const WorkDoneProgressEnd = struct {
+pub const WorkDoneProgressEnd = struct {
     comptime kind: []const u8 = "end",
 
     /// Optional, a final message indicating to for example indicate the outcome
     /// of the operation.
     message: Undefinedable([]const u8),
 };
-const WorkDoneProgressCreateParams = struct {
+pub const WorkDoneProgressCreateParams = struct {
     /// The token to be used to report progress.
     token: ProgressToken,
 };
 
 /// The `window/workDoneProgress/create` request is sent from the server to the client to initiate progress
 /// reporting from the server.
-const WorkDoneProgressCreateRequest = struct {
-    const @"type" = ManuallyTranslateValue;
-    const HandlerSignature = RequestHandler;
+pub const WorkDoneProgressCreateRequest = struct {
+    pub const @"type" = ManuallyTranslateValue;
+    pub const HandlerSignature = RequestHandler;
 };
-const WorkDoneProgressCancelParams = struct {
+pub const WorkDoneProgressCancelParams = struct {
     /// The token to be used to report progress.
     token: ProgressToken,
 };
 
 /// The `window/workDoneProgress/cancel` notification is sent from  the client to the server to cancel a progress
 /// initiated on the server side.
-const WorkDoneProgressCancelNotification = struct {
-    const @"type" = ManuallyTranslateValue;
-    const HandlerSignature = NotificationHandler;
+pub const WorkDoneProgressCancelNotification = struct {
+    pub const @"type" = ManuallyTranslateValue;
+    pub const HandlerSignature = NotificationHandler;
 };
-const CallHierarchyClientCapabilities = struct {
+pub const CallHierarchyClientCapabilities = struct {
     /// Whether implementation supports dynamic registration. If this is set to `true`
     /// the client supports the new `(TextDocumentRegistrationOptions & StaticRegistrationOptions)`
     /// return value for the corresponding server capability as well.
@@ -3791,12 +3744,12 @@ const CallHierarchyClientCapabilities = struct {
 };
 
 /// Call hierarchy options used during static registration.
-const CallHierarchyOptions = struct {
+pub const CallHierarchyOptions = struct {
     workDoneProgress: Undefinedable(bool),
 };
 
 /// Call hierarchy options used during static or dynamic registration.
-const CallHierarchyRegistrationOptions = struct {
+pub const CallHierarchyRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
@@ -3808,7 +3761,7 @@ const CallHierarchyRegistrationOptions = struct {
 };
 
 /// The parameter of a `callHierarchy/incomingCalls` request.
-const CallHierarchyIncomingCallsParams = struct {
+pub const CallHierarchyIncomingCallsParams = struct {
     item: CallHierarchyItem,
 
     /// An optional token that a server can use to report work done progress.
@@ -3820,14 +3773,14 @@ const CallHierarchyIncomingCallsParams = struct {
 };
 
 /// A request to resolve the incoming calls for a given `CallHierarchyItem`.
-const CallHierarchyIncomingCallsRequest = struct {
-    const method = "callHierarchy/incomingCalls";
-    const @"type" = ManuallyTranslateValue;
-    const HandlerSignature = RequestHandler;
+pub const CallHierarchyIncomingCallsRequest = struct {
+    pub const method = "callHierarchy/incomingCalls";
+    pub const @"type" = ManuallyTranslateValue;
+    pub const HandlerSignature = RequestHandler;
 };
 
 /// The parameter of a `callHierarchy/outgoingCalls` request.
-const CallHierarchyOutgoingCallsParams = struct {
+pub const CallHierarchyOutgoingCallsParams = struct {
     item: CallHierarchyItem,
 
     /// An optional token that a server can use to report work done progress.
@@ -3839,14 +3792,14 @@ const CallHierarchyOutgoingCallsParams = struct {
 };
 
 /// A request to resolve the outgoing calls for a given `CallHierarchyItem`.
-const CallHierarchyOutgoingCallsRequest = struct {
-    const method = "callHierarchy/outgoingCalls";
-    const @"type" = ManuallyTranslateValue;
-    const HandlerSignature = RequestHandler;
+pub const CallHierarchyOutgoingCallsRequest = struct {
+    pub const method = "callHierarchy/outgoingCalls";
+    pub const @"type" = ManuallyTranslateValue;
+    pub const HandlerSignature = RequestHandler;
 };
 
 /// The parameter of a `textDocument/prepareCallHierarchy` request.
-const CallHierarchyPrepareParams = struct {
+pub const CallHierarchyPrepareParams = struct {
     /// The text document.
     textDocument: TextDocumentIdentifier,
 
@@ -3859,62 +3812,62 @@ const CallHierarchyPrepareParams = struct {
 
 /// A request to result a `CallHierarchyItem` in a document at a given position.
 /// Can be used as an input to a incoming or outgoing call hierarchy.
-const CallHierarchyPrepareRequest = struct {
-    const method = "textDocument/prepareCallHierarchy";
-    const @"type" = ManuallyTranslateValue;
-    const HandlerSignature = RequestHandler;
+pub const CallHierarchyPrepareRequest = struct {
+    pub const method = "textDocument/prepareCallHierarchy";
+    pub const @"type" = ManuallyTranslateValue;
+    pub const HandlerSignature = RequestHandler;
 };
 
 /// A set of predefined token types. This set is not fixed
 /// an clients can specify additional token types via the
 /// corresponding client capabilities.
-const SemanticTokenTypes = struct {
-    const class = "class";
-    const comment = "comment";
-    const @"enum" = "enum";
-    const enumMember = "enumMember";
-    const event = "event";
-    const function = "function";
-    const interface = "interface";
-    const keyword = "keyword";
-    const macro = "macro";
-    const method = "method";
-    const modifier = "modifier";
-    const namespace = "namespace";
-    const number = "number";
-    const operator = "operator";
-    const parameter = "parameter";
-    const property = "property";
-    const regexp = "regexp";
-    const string = "string";
-    const @"struct" = "struct";
-    const @"type" = "type";
-    const typeParameter = "typeParameter";
-    const variable = "variable";
+pub const SemanticTokenTypes = struct {
+    pub const class = "class";
+    pub const comment = "comment";
+    pub const @"enum" = "enum";
+    pub const enumMember = "enumMember";
+    pub const event = "event";
+    pub const function = "function";
+    pub const interface = "interface";
+    pub const keyword = "keyword";
+    pub const macro = "macro";
+    pub const method = "method";
+    pub const modifier = "modifier";
+    pub const namespace = "namespace";
+    pub const number = "number";
+    pub const operator = "operator";
+    pub const parameter = "parameter";
+    pub const property = "property";
+    pub const regexp = "regexp";
+    pub const string = "string";
+    pub const @"struct" = "struct";
+    pub const @"type" = "type";
+    pub const typeParameter = "typeParameter";
+    pub const variable = "variable";
 };
 /// A set of predefined token modifiers. This set is not fixed
 /// an clients can specify additional token types via the
 /// corresponding client capabilities.
-const SemanticTokenModifiers = struct {
-    const abstract = "abstract";
-    const @"async" = "async";
-    const declaration = "declaration";
-    const defaultLibrary = "defaultLibrary";
-    const definition = "definition";
-    const deprecated = "deprecated";
-    const documentation = "documentation";
-    const modification = "modification";
-    const readonly = "readonly";
-    const static = "static";
+pub const SemanticTokenModifiers = struct {
+    pub const abstract = "abstract";
+    pub const @"async" = "async";
+    pub const declaration = "declaration";
+    pub const defaultLibrary = "defaultLibrary";
+    pub const definition = "definition";
+    pub const deprecated = "deprecated";
+    pub const documentation = "documentation";
+    pub const modification = "modification";
+    pub const readonly = "readonly";
+    pub const static = "static";
 };
-const SemanticTokensLegend = struct {
+pub const SemanticTokensLegend = struct {
     /// The token types a server uses.
     tokenTypes: [][]const u8,
 
     /// The token modifiers a server uses.
     tokenModifiers: [][]const u8,
 };
-const SemanticTokens = struct {
+pub const SemanticTokens = struct {
     /// An optional result id. If provided and clients support delta updating
     /// the client will include the result id in the next semantic token request.
     /// A server can then instead of computing all semantic tokens again simply
@@ -3924,10 +3877,10 @@ const SemanticTokens = struct {
     /// The actual tokens.
     data: []i64,
 };
-const SemanticTokensPartialResult = struct {
+pub const SemanticTokensPartialResult = struct {
     data: []i64,
 };
-const SemanticTokensEdit = struct {
+pub const SemanticTokensEdit = struct {
     /// The start offset of the edit.
     start: i64,
 
@@ -3937,19 +3890,21 @@ const SemanticTokensEdit = struct {
     /// The elements to insert.
     data: Undefinedable([]i64),
 };
-const SemanticTokensDelta = struct {
+pub const SemanticTokensDelta = struct {
     resultId: Undefinedable([]const u8),
 
     /// The semantic token edits to transform a previous result into a new result.
     edits: []SemanticTokensEdit,
 };
-const SemanticTokensDeltaPartialResult = struct {
+pub const SemanticTokensDeltaPartialResult = struct {
     edits: []SemanticTokensEdit,
 };
-const TokenFormat = struct {
-    const Relative = "relative";
+pub const TokenFormat = enum {
+    relative,
+
+    usingnamespace StringBackedEnumStringify(@This());
 };
-const SemanticTokensClientCapabilities = struct {
+pub const SemanticTokensClientCapabilities = struct {
     /// Whether implementation supports dynamic registration. If this is set to `true`
     /// the client supports the new `(TextDocumentRegistrationOptions & StaticRegistrationOptions)`
     /// return value for the corresponding server capability as well.
@@ -3990,7 +3945,7 @@ const SemanticTokensClientCapabilities = struct {
     tokenModifiers: [][]const u8,
 
     /// The token formats the clients supports.
-    formats: []relative,
+    formats: []TokenFormat,
 
     /// Whether the client supports tokens that can overlap each other.
     overlappingTokenSupport: Undefinedable(bool),
@@ -3998,7 +3953,7 @@ const SemanticTokensClientCapabilities = struct {
     /// Whether the client supports tokens that can span multiple lines.
     multilineTokenSupport: Undefinedable(bool),
 };
-const SemanticTokensOptions = struct {
+pub const SemanticTokensOptions = struct {
     /// The legend used by the server
     legend: SemanticTokensLegend,
 
@@ -4019,7 +3974,7 @@ const SemanticTokensOptions = struct {
     }),
     workDoneProgress: Undefinedable(bool),
 };
-const SemanticTokensRegistrationOptions = struct {
+pub const SemanticTokensRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
@@ -4048,7 +4003,7 @@ const SemanticTokensRegistrationOptions = struct {
     /// the request again. See also Registration#id.
     id: Undefinedable([]const u8),
 };
-const SemanticTokensParams = struct {
+pub const SemanticTokensParams = struct {
     /// The text document.
     textDocument: TextDocumentIdentifier,
 
@@ -4059,12 +4014,12 @@ const SemanticTokensParams = struct {
     /// the client.
     partialResultToken: Undefinedable(ProgressToken),
 };
-const SemanticTokensRequest = struct {
-    const method = "textDocument/semanticTokens/full";
-    const @"type" = ManuallyTranslateValue;
-    const HandlerSignature = RequestHandler;
+pub const SemanticTokensRequest = struct {
+    pub const method = "textDocument/semanticTokens/full";
+    pub const @"type" = ManuallyTranslateValue;
+    pub const HandlerSignature = RequestHandler;
 };
-const SemanticTokensDeltaParams = struct {
+pub const SemanticTokensDeltaParams = struct {
     /// The text document.
     textDocument: TextDocumentIdentifier,
 
@@ -4079,12 +4034,12 @@ const SemanticTokensDeltaParams = struct {
     /// the client.
     partialResultToken: Undefinedable(ProgressToken),
 };
-const SemanticTokensDeltaRequest = struct {
-    const method = "textDocument/semanticTokens/full/delta";
-    const @"type" = ManuallyTranslateValue;
-    const HandlerSignature = RequestHandler;
+pub const SemanticTokensDeltaRequest = struct {
+    pub const method = "textDocument/semanticTokens/full/delta";
+    pub const @"type" = ManuallyTranslateValue;
+    pub const HandlerSignature = RequestHandler;
 };
-const SemanticTokensRangeParams = struct {
+pub const SemanticTokensRangeParams = struct {
     /// The text document.
     textDocument: TextDocumentIdentifier,
 
@@ -4098,23 +4053,23 @@ const SemanticTokensRangeParams = struct {
     /// the client.
     partialResultToken: Undefinedable(ProgressToken),
 };
-const SemanticTokensRangeRequest = struct {
-    const method = "textDocument/semanticTokens/range";
-    const @"type" = ManuallyTranslateValue;
-    const HandlerSignature = RequestHandler;
+pub const SemanticTokensRangeRequest = struct {
+    pub const method = "textDocument/semanticTokens/range";
+    pub const @"type" = ManuallyTranslateValue;
+    pub const HandlerSignature = RequestHandler;
 };
-const SemanticTokensRefreshRequest = struct {
-    const method = ManuallyTranslateValue;
-    const @"type" = ManuallyTranslateValue;
-    const HandlerSignature = RequestHandler0;
+pub const SemanticTokensRefreshRequest = struct {
+    pub const method = ManuallyTranslateValue;
+    pub const @"type" = ManuallyTranslateValue;
+    pub const HandlerSignature = RequestHandler0;
 };
-const SemanticTokensRegistrationType = struct {
-    const method = "textDocument/semanticTokens";
-    const @"type" = ManuallyTranslateValue;
+pub const SemanticTokensRegistrationType = struct {
+    pub const method = "textDocument/semanticTokens";
+    pub const @"type" = ManuallyTranslateValue;
 };
 
 /// Params to show a document.
-const ShowDocumentParams = struct {
+pub const ShowDocumentParams = struct {
     /// The document uri to show.
     uri: []const u8,
 
@@ -4140,27 +4095,27 @@ const ShowDocumentParams = struct {
 /// external program depending on the value of the URI to open.
 /// For example a request to open `https://code.visualstudio.com/`
 /// will very likely open the URI in a WEB browser.
-const ShowDocumentRequest = struct {
-    const method = "window/showDocument";
-    const @"type" = ManuallyTranslateValue;
-    const HandlerSignature = RequestHandler;
+pub const ShowDocumentRequest = struct {
+    pub const method = "window/showDocument";
+    pub const @"type" = ManuallyTranslateValue;
+    pub const HandlerSignature = RequestHandler;
 };
 
 /// The result of an show document request.
-const ShowDocumentResult = struct {
+pub const ShowDocumentResult = struct {
     /// A boolean indicating if the show was successful.
     success: bool,
 };
 
 /// Client capabilities for the show document request.
-const ShowDocumentClientCapabilities = struct {
+pub const ShowDocumentClientCapabilities = struct {
     /// The client has support for the show document
     /// request.
     support: bool,
 };
 
 /// Client capabilities for the linked editing range request.
-const LinkedEditingRangeClientCapabilities = struct {
+pub const LinkedEditingRangeClientCapabilities = struct {
     /// Whether implementation supports dynamic registration. If this is set to `true`
     /// the client supports the new `(TextDocumentRegistrationOptions & StaticRegistrationOptions)`
     /// return value for the corresponding server capability as well.
@@ -4168,7 +4123,7 @@ const LinkedEditingRangeClientCapabilities = struct {
 };
 
 /// The result of a linked editing range request.
-const LinkedEditingRanges = struct {
+pub const LinkedEditingRanges = struct {
     /// A list of ranges that can be edited together. The ranges must have
     /// identical length and contain identical text content. The ranges cannot overlap.
     ranges: []Range,
@@ -4178,10 +4133,10 @@ const LinkedEditingRanges = struct {
     /// pattern will be used.
     wordPattern: Undefinedable([]const u8),
 };
-const LinkedEditingRangeOptions = struct {
+pub const LinkedEditingRangeOptions = struct {
     workDoneProgress: Undefinedable(bool),
 };
-const LinkedEditingRangeParams = struct {
+pub const LinkedEditingRangeParams = struct {
     /// The text document.
     textDocument: TextDocumentIdentifier,
 
@@ -4191,7 +4146,7 @@ const LinkedEditingRangeParams = struct {
     /// An optional token that a server can use to report work done progress.
     workDoneToken: Undefinedable(ProgressToken),
 };
-const LinkedEditingRangeRegistrationOptions = struct {
+pub const LinkedEditingRangeRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
@@ -4203,14 +4158,14 @@ const LinkedEditingRangeRegistrationOptions = struct {
 };
 
 /// A request to provide ranges that can be edited together.
-const LinkedEditingRangeRequest = struct {
-    const method = "textDocument/linkedEditingRange";
-    const @"type" = ManuallyTranslateValue;
-    const HandlerSignature = RequestHandler;
+pub const LinkedEditingRangeRequest = struct {
+    pub const method = "textDocument/linkedEditingRange";
+    pub const @"type" = ManuallyTranslateValue;
+    pub const HandlerSignature = RequestHandler;
 };
 
 /// Options for notifications/requests for user operations on files.
-const FileOperationOptions = struct {
+pub const FileOperationOptions = struct {
     /// The server is interested in didCreateFiles notifications.
     didCreate: Undefinedable(FileOperationRegistrationOptions),
 
@@ -4231,7 +4186,7 @@ const FileOperationOptions = struct {
 };
 
 /// Capabilities relating to events from file operations by the user in the client.
-const FileOperationClientCapabilities = struct {
+pub const FileOperationClientCapabilities = struct {
     /// Whether the client supports dynamic registration for file requests/notifications.
     dynamicRegistration: Undefinedable(bool),
 
@@ -4255,71 +4210,71 @@ const FileOperationClientCapabilities = struct {
 };
 
 /// The options to register for file operations.
-const FileOperationRegistrationOptions = struct {
+pub const FileOperationRegistrationOptions = struct {
     /// The actual filters.
     filters: []FileOperationFilter,
 };
 
 /// Matching options for the file operation pattern.
-const FileOperationPatternOptions = struct {
+pub const FileOperationPatternOptions = struct {
     /// The pattern should be matched ignoring casing.
     ignoreCase: Undefinedable(bool),
 };
 
 /// A pattern kind describing if a glob pattern matches a file a folder or
 /// both.
-const FileOperationPatternKind = struct {
+pub const FileOperationPatternKind = struct {
     /// The pattern matches a file only.
-    const file = "file";
+    pub const file = "file";
     /// The pattern matches a folder only.
-    const folder = "folder";
+    pub const folder = "folder";
 };
 
 /// The did create files notification is sent from the client to the server when
 /// files were created from within the client.
-const DidCreateFilesNotification = struct {
-    const method = "workspace/didCreateFiles";
-    const @"type" = ManuallyTranslateValue;
-    const HandlerSignature = NotificationHandler;
+pub const DidCreateFilesNotification = struct {
+    pub const method = "workspace/didCreateFiles";
+    pub const @"type" = ManuallyTranslateValue;
+    pub const HandlerSignature = NotificationHandler;
 };
 
 /// The parameters sent in file create requests/notifications.
-const CreateFilesParams = struct {
+pub const CreateFilesParams = struct {
     /// An array of all files/folders created in this operation.
     files: []FileCreate,
 };
 
 /// Represents information on a file/folder create.
-const FileCreate = struct {
+pub const FileCreate = struct {
     /// A file:// URI for the location of the file/folder being created.
     uri: []const u8,
 };
 
 /// The will create files request is sent from the client to the server before files are actually
 /// created as long as the creation is triggered from within the client.
-const WillCreateFilesRequest = struct {
-    const method = "workspace/willCreateFiles";
-    const @"type" = ManuallyTranslateValue;
-    const HandlerSignature = RequestHandler;
+pub const WillCreateFilesRequest = struct {
+    pub const method = "workspace/willCreateFiles";
+    pub const @"type" = ManuallyTranslateValue;
+    pub const HandlerSignature = RequestHandler;
 };
 
 /// The did rename files notification is sent from the client to the server when
 /// files were renamed from within the client.
-const DidRenameFilesNotification = struct {
-    const method = "workspace/didRenameFiles";
-    const @"type" = ManuallyTranslateValue;
-    const HandlerSignature = NotificationHandler;
+pub const DidRenameFilesNotification = struct {
+    pub const method = "workspace/didRenameFiles";
+    pub const @"type" = ManuallyTranslateValue;
+    pub const HandlerSignature = NotificationHandler;
 };
 
 /// The parameters sent in file rename requests/notifications.
-const RenameFilesParams = struct {
+pub const RenameFilesParams = struct {
     /// An array of all files/folders renamed in this operation. When a folder is renamed, only
     /// the folder will be included, and not its children.
     files: []FileRename,
 };
 
 /// Represents information on a file/folder rename.
-const FileRename = struct {
+pub const FileRename = struct {
     /// A file:// URI for the original location of the file/folder being renamed.
     oldUri: []const u8,
 
@@ -4329,56 +4284,56 @@ const FileRename = struct {
 
 /// The will rename files request is sent from the client to the server before files are actually
 /// renamed as long as the rename is triggered from within the client.
-const WillRenameFilesRequest = struct {
-    const method = "workspace/willRenameFiles";
-    const @"type" = ManuallyTranslateValue;
-    const HandlerSignature = RequestHandler;
+pub const WillRenameFilesRequest = struct {
+    pub const method = "workspace/willRenameFiles";
+    pub const @"type" = ManuallyTranslateValue;
+    pub const HandlerSignature = RequestHandler;
 };
 
 /// The will delete files request is sent from the client to the server before files are actually
 /// deleted as long as the deletion is triggered from within the client.
-const DidDeleteFilesNotification = struct {
-    const method = "workspace/didDeleteFiles";
-    const @"type" = ManuallyTranslateValue;
-    const HandlerSignature = NotificationHandler;
+pub const DidDeleteFilesNotification = struct {
+    pub const method = "workspace/didDeleteFiles";
+    pub const @"type" = ManuallyTranslateValue;
+    pub const HandlerSignature = NotificationHandler;
 };
 
 /// The parameters sent in file delete requests/notifications.
-const DeleteFilesParams = struct {
+pub const DeleteFilesParams = struct {
     /// An array of all files/folders deleted in this operation.
     files: []FileDelete,
 };
 
 /// Represents information on a file/folder delete.
-const FileDelete = struct {
+pub const FileDelete = struct {
     /// A file:// URI for the location of the file/folder being deleted.
     uri: []const u8,
 };
 
 /// The did delete files notification is sent from the client to the server when
 /// files were deleted from within the client.
-const WillDeleteFilesRequest = struct {
-    const method = "workspace/willDeleteFiles";
-    const @"type" = ManuallyTranslateValue;
-    const HandlerSignature = RequestHandler;
+pub const WillDeleteFilesRequest = struct {
+    pub const method = "workspace/willDeleteFiles";
+    pub const @"type" = ManuallyTranslateValue;
+    pub const HandlerSignature = RequestHandler;
 };
 
 /// Moniker uniqueness level to define scope of the moniker.
-const UniquenessLevel = struct {
-    const document = "document";
-    const global = "global";
-    const group = "group";
-    const project = "project";
-    const scheme = "scheme";
+pub const UniquenessLevel = struct {
+    pub const document = "document";
+    pub const global = "global";
+    pub const group = "group";
+    pub const project = "project";
+    pub const scheme = "scheme";
 };
 /// The moniker kind.
-const MonikerKind = struct {
-    const @"export" = "export";
-    const @"import" = "import";
-    const local = "local";
+pub const MonikerKind = struct {
+    pub const @"export" = "export";
+    pub const @"import" = "import";
+    pub const local = "local";
 };
 /// Moniker definition to match LSIF 0.5 moniker definition.
-const Moniker = struct {
+pub const Moniker = struct {
     /// The scheme of the moniker. For example tsc or .Net
     scheme: []const u8,
 
@@ -4394,22 +4349,22 @@ const Moniker = struct {
 };
 
 /// Client capabilities specific to the moniker request.
-const MonikerClientCapabilities = struct {
+pub const MonikerClientCapabilities = struct {
     /// Whether moniker supports dynamic registration. If this is set to `true`
     /// the client supports the new `MonikerRegistrationOptions` return value
     /// for the corresponding server capability as well.
     dynamicRegistration: Undefinedable(bool),
 };
-const MonikerOptions = struct {
+pub const MonikerOptions = struct {
     workDoneProgress: Undefinedable(bool),
 };
-const MonikerRegistrationOptions = struct {
+pub const MonikerRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
     workDoneProgress: Undefinedable(bool),
 };
-const MonikerParams = struct {
+pub const MonikerParams = struct {
     /// The text document.
     textDocument: TextDocumentIdentifier,
 
@@ -4427,12 +4382,16 @@ const MonikerParams = struct {
 /// A request to get the moniker of a symbol at a given text document position.
 /// The request parameter is of type [TextDocumentPositionParams](#TextDocumentPositionParams).
 /// The response is of type [Moniker[]](#Moniker[]) or `null`.
-const MonikerRequest = struct {
-    const method = "textDocument/moniker";
-    const @"type" = ManuallyTranslateValue;
+pub const MonikerRequest = struct {
+    pub const method = "textDocument/moniker";
+    pub const @"type" = ManuallyTranslateValue;
 };
-const ColorProviderOptions = DocumentColorOptions;
-const ColorOptions = DocumentColorOptions;
-const FoldingRangeProviderOptions = FoldingRangeOptions;
-const SelectionRangeProviderOptions = SelectionRangeOptions;
-const ColorRegistrationOptions = DocumentColorRegistrationOptions;
+pub const ColorProviderOptions = DocumentColorOptions;
+pub const ColorOptions = DocumentColorOptions;
+pub const FoldingRangeProviderOptions = FoldingRangeOptions;
+pub const SelectionRangeProviderOptions = SelectionRangeOptions;
+pub const ColorRegistrationOptions = DocumentColorRegistrationOptions;
+
+test {
+    std.testing.refAllDecls(@This());
+}

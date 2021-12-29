@@ -5,7 +5,9 @@ const base = fs.readFileSync(path.join(__dirname, "base.zig"));
 const typeSchema = JSON.parse(fs.readFileSync(path.join(__dirname, "types_schema.json")));
 const protocolSchema = JSON.parse(fs.readFileSync(path.join(__dirname, "protocol_schema.json")));
 
-const outStream = fs.createWriteStream(path.join(process.cwd(), "lsp.zig"));
+const outStream = fs.createWriteStream(path.join(process.cwd(), "lsp_generated.zig"));
+
+const generateTypeParams = false;
 
 function wrapName(name) {
     if (["type", "async", "struct", "enum", "export", "import", "error"].includes(name) || name.includes("$")) return `@"${name}"`;
@@ -53,7 +55,7 @@ function emitComment(child) {
 
 function translateType(type) {
     if (type === "string") return "[]const u8";
-    if (type === "number") return "i64";
+    if (type === "number" || type === "uinteger" || type === "integer") return "i64";
     if (type === "boolean") return "bool";
     if (type === "object") return "ManuallyTranslateValue";
     if (type === "any" || type === "unknown") return "std.json.Value";
@@ -67,7 +69,7 @@ function emitType(schema, type) {
             break;
 
         case "reference":
-            outStream.write(wrapName(type.name));
+            outStream.write(wrapName(translateType(type.name)));
             break;
 
         case "array":
@@ -160,15 +162,22 @@ function emitChild(schema, child) {
     switch (child.kindString) {
         case "Reference":
             emitComment(child);
-            outStream.write(`const ${wrapName(child.name)} = ${wrapName(locateId(schema, child.target).name)};\n`);
+            outStream.write(`pub const ${wrapName(child.name)} = ${wrapName(locateId(schema, child.target).name)};\n`);
             break;
 
         case "Interface":
             emitComment(child);
-            outStream.write(`const ${wrapName(child.name)} = struct {`);
-            if (child.children)
-                for (const cc of sortChildren(child.children)) emitChild(schema, cc);
-            outStream.write(`};\n`);
+            if (generateTypeParams && child.typeParameter) {
+                outStream.write(`pub fn ${wrapName(child.name)}(${child.typeParameter.map(_ => `comptime ${_.name}: type`)}) type {\nreturn struct {`);
+                if (child.children)
+                    for (const cc of sortChildren(child.children)) emitChild(schema, cc);
+                outStream.write(`};}\n`);
+            } else {
+                outStream.write(`pub const ${wrapName(child.name)} = struct {`);
+                if (child.children)
+                    for (const cc of sortChildren(child.children)) emitChild(schema, cc);
+                outStream.write(`};\n`);
+            }
             break;
 
         case "Property":
@@ -193,7 +202,7 @@ function emitChild(schema, child) {
             // console.log()
 
             emitComment(child);
-            outStream.write(`const ${wrapName(child.name)} = `);
+            outStream.write(`pub const ${wrapName(child.name)} = `);
             emitType(schema, child.type);
             outStream.write(";\n");
             break;
@@ -228,7 +237,7 @@ function emitChild(schema, child) {
 
             if (child.children.reduce((prev, curr) => prev || (curr.type.type === "literal" && typeof curr.type.value === "number"), false)) {
                 emitComment(child);
-                outStream.write(`const ${wrapName(child.name)} = enum(i64) {`);
+                outStream.write(`pub const ${wrapName(child.name)} = enum(i64) {`);
                 if (sortChildren(child.children))
                     for (const cc of child.children) outStream.write(`${wrapName(cc.name)} = ${cc.defaultValue},`);
                 outStream.write(`\n\n
@@ -236,7 +245,7 @@ function emitChild(schema, child) {
         `);
             } else {
                 emitComment(child);
-                outStream.write(`const ${wrapName(child.name)} = struct {`);
+                outStream.write(`pub const ${wrapName(child.name)} = struct {`);
                 if (child.children)
                     for (const cc of sortChildren(child.children)) emitChild(schema, cc);
             }
@@ -246,7 +255,7 @@ function emitChild(schema, child) {
 
         case "Variable":
             emitComment(child);
-            outStream.write(`const ${wrapName(child.name)} = `);
+            outStream.write(`pub const ${wrapName(child.name)} = `);
 
             if (child.defaultValue) {
                 if (child.defaultValue.startsWith("'"))
@@ -266,9 +275,9 @@ function emitChild(schema, child) {
 
         case "Enumeration":
             emitComment(child);
-            outStream.write(`const ${wrapName(child.name)} = struct {`);
+            outStream.write(`pub const ${wrapName(child.name)} = struct {`);
             for (const cc of child.children) {
-                outStream.write(`const ${wrapName(cc.name)} = ${cc.defaultValue};`)
+                outStream.write(`pub const ${wrapName(cc.name)} = ${cc.defaultValue};`)
             }
             outStream.write("};");
             break;

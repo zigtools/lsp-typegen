@@ -209,6 +209,10 @@ module.exports = class TypeEmitter {
      * @returns {void}
      */
     emitChild(child) {
+        // if (child.comment && child.comment.tags && child.comment.tags.find(_ => _.tag === "deprecated")) {
+        //     console.log(`Not emitting deprecated child ${child.name} ${child.sources[0].fileName}:${child.sources[0].line}`);
+        //     return;
+        // }
         if (child.name === "<internal>") return;
     
         switch (child.kind) {
@@ -238,9 +242,9 @@ module.exports = class TypeEmitter {
                     this.writeStream.write(`comptime ${utils.wrapName(child.name)}: ${utils.translateType(typeof child.type.value)} = ${JSON.stringify(child.type.value)},\n`);
                 } else {
                     this.writeStream.write(`${utils.wrapName(child.name)}: `);
-                    if (child.flags.isOptional) this.writeStream.write("Undefinedable(");
+                    if (child.flags.isOptional) this.writeStream.write("?");
                     this.emitType(child.type);
-                    if (child.flags.isOptional) this.writeStream.write(")");
+                    if (child.flags.isOptional) this.writeStream.write(" = null");
                     this.writeStream.write(",\n");
                 }
                 break;
@@ -293,6 +297,8 @@ module.exports = class TypeEmitter {
                     } else {
                         this.writeStream.write(`comptime method: []const u8 = "${(/'(.+)'/.exec(typeLine)[1])}",\n`);
                     }
+
+                    this.writeStream.write("id: RequestId,\n");
 
                     const paramMatch = /<(.+?)[,&]/.exec(typeLine);
                     if (paramMatch && typeLine.indexOf("ProtocolRequestType0") === -1 && paramMatch[1] !== "void")

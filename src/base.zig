@@ -62,13 +62,14 @@ test "string-backed enum stringify" {
 }
 
 /// The LSP any type
-const LSPAny = std.json.Value;
+pub const LSPAny = std.json.Value;
 
-const ManuallyTranslateValue = @compileError("bruh 😭");
+pub const ManuallyTranslateValue = @compileError("bruh 😭");
 
-fn Undefinedable(comptime T: type) type {
-    return T;
-}
+pub const RequestId = union(enum) {
+    integer: i64,
+    string: []const u8,
+};
 
 test {
     // Test for general correctness of structs

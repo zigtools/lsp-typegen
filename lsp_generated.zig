@@ -62,13 +62,14 @@ test "string-backed enum stringify" {
 }
 
 /// The LSP any type
-const LSPAny = std.json.Value;
+pub const LSPAny = std.json.Value;
 
-const ManuallyTranslateValue = @compileError("bruh 😭");
+pub const ManuallyTranslateValue = @compileError("bruh 😭");
 
-fn Undefinedable(comptime T: type) type {
-    return T;
-}
+pub const RequestId = union(enum) {
+    integer: i64,
+    string: []const u8,
+};
 
 test {
     // Test for general correctness of structs
@@ -116,7 +117,7 @@ pub const Location = struct {
 /// including an origin range.
 pub const LocationLink = struct {
     /// Span of the origin of this link.
-    originSelectionRange: Undefinedable(Range),
+    originSelectionRange: ?Range = null,
 
     /// The target resource identifier of this link.
     targetUri: []const u8,
@@ -163,11 +164,11 @@ pub const ColorPresentation = struct {
     /// An [edit](#TextEdit) which is applied to a document when selecting
     /// this presentation for the color.  When `falsy` the [label](#ColorPresentation.label)
     /// is used.
-    textEdit: Undefinedable(TextEdit),
+    textEdit: ?TextEdit = null,
 
     /// An optional array of additional [text edits](#TextEdit) that are applied when
     /// selecting this color presentation. Edits must not overlap with the main [edit](#ColorPresentation.textEdit) nor with themselves.
-    additionalTextEdits: Undefinedable([]TextEdit),
+    additionalTextEdits: ?[]TextEdit = null,
 };
 
 /// Enum of known range kinds
@@ -184,19 +185,19 @@ pub const FoldingRange = struct {
     startLine: i64,
 
     /// The zero-based character offset from where the folded range starts. If not defined, defaults to the length of the start line.
-    startCharacter: Undefinedable(i64),
+    startCharacter: ?i64 = null,
 
     /// The zero-based end line of the range to fold. The folded area ends with the line's last character.
     /// To be valid, the end must be zero or larger and smaller than the number of lines in the document.
     endLine: i64,
 
     /// The zero-based character offset before the folded range ends. If not defined, defaults to the length of the end line.
-    endCharacter: Undefinedable(i64),
+    endCharacter: ?i64 = null,
 
     /// Describes the kind of the folding range such as `comment' or 'region'. The kind
     /// is used to categorize folding ranges and used by commands like 'Fold all comments'. See
     /// [FoldingRangeKind](#FoldingRangeKind) for an enumeration of standardized kinds.
-    kind: Undefinedable([]const u8),
+    kind: ?[]const u8 = null,
 };
 
 /// Represents a related message and source code location for a diagnostic. This should be
@@ -242,35 +243,35 @@ pub const Diagnostic = struct {
 
     /// The diagnostic's severity. Can be omitted. If omitted it is up to the
     /// client to interpret diagnostics as error, warning, info or hint.
-    severity: Undefinedable(DiagnosticSeverity),
+    severity: ?DiagnosticSeverity = null,
 
     /// The diagnostic's code, which usually appear in the user interface.
-    code: Undefinedable(union(enum) {
+    code: ?union(enum) {
         string: []const u8,
         number: i64,
-    }),
+    } = null,
 
     /// An optional property to describe the error code.
-    codeDescription: Undefinedable(CodeDescription),
+    codeDescription: ?CodeDescription = null,
 
     /// A human-readable string describing the source of this
     /// diagnostic, e.g. 'typescript' or 'super lint'. It usually
     /// appears in the user interface.
-    source: Undefinedable([]const u8),
+    source: ?[]const u8 = null,
 
     /// The diagnostic's message. It usually appears in the user interface
     message: []const u8,
 
     /// Additional metadata about the diagnostic.
-    tags: Undefinedable([]DiagnosticTag),
+    tags: ?[]DiagnosticTag = null,
 
     /// An array of related diagnostic information, e.g. when symbol-names within
     /// a scope collide all definitions can be marked via this property.
-    relatedInformation: Undefinedable([]DiagnosticRelatedInformation),
+    relatedInformation: ?[]DiagnosticRelatedInformation = null,
 
     /// A data entry field that is preserved between a `textDocument/publishDiagnostics`
     /// notification and `textDocument/codeAction` request.
-    data: Undefinedable(std.json.Value),
+    data: ?std.json.Value = null,
 };
 
 /// Represents a reference to a command. Provides a title which
@@ -286,7 +287,7 @@ pub const Command = struct {
 
     /// Arguments that the command handler should be
     /// invoked with.
-    arguments: Undefinedable([]std.json.Value),
+    arguments: ?[]std.json.Value = null,
 };
 
 /// A text edit applicable to a text document.
@@ -308,11 +309,11 @@ pub const ChangeAnnotation = struct {
 
     /// A flag which indicates that user confirmation is needed
     /// before applying the change.
-    needsConfirmation: Undefinedable(bool),
+    needsConfirmation: ?bool = null,
 
     /// A human-readable string which is rendered less prominent in
     /// the user interface.
-    description: Undefinedable([]const u8),
+    description: ?[]const u8 = null,
 };
 
 /// An identifier to refer to a change annotation stored with a workspace edit.
@@ -350,10 +351,10 @@ pub const TextDocumentEdit = struct {
 /// Options to create a file.
 pub const CreateFileOptions = struct {
     /// Overwrite existing file. Overwrite wins over `ignoreIfExists`
-    overwrite: Undefinedable(bool),
+    overwrite: ?bool = null,
 
     /// Ignore if exists.
-    ignoreIfExists: Undefinedable(bool),
+    ignoreIfExists: ?bool = null,
 };
 
 /// Create file operation.
@@ -365,19 +366,19 @@ pub const CreateFile = struct {
     uri: []const u8,
 
     /// Additional options
-    options: Undefinedable(CreateFileOptions),
+    options: ?CreateFileOptions = null,
 
     /// An optional annotation identifier describing the operation.
-    annotationId: Undefinedable([]const u8),
+    annotationId: ?[]const u8 = null,
 };
 
 /// Rename file options
 pub const RenameFileOptions = struct {
     /// Overwrite target if existing. Overwrite wins over `ignoreIfExists`
-    overwrite: Undefinedable(bool),
+    overwrite: ?bool = null,
 
     /// Ignores if target exists.
-    ignoreIfExists: Undefinedable(bool),
+    ignoreIfExists: ?bool = null,
 };
 
 /// Rename file operation
@@ -392,19 +393,19 @@ pub const RenameFile = struct {
     newUri: []const u8,
 
     /// Rename options.
-    options: Undefinedable(RenameFileOptions),
+    options: ?RenameFileOptions = null,
 
     /// An optional annotation identifier describing the operation.
-    annotationId: Undefinedable([]const u8),
+    annotationId: ?[]const u8 = null,
 };
 
 /// Delete file options
 pub const DeleteFileOptions = struct {
     /// Delete the content recursively if a folder is denoted.
-    recursive: Undefinedable(bool),
+    recursive: ?bool = null,
 
     /// Ignore the operation if the file doesn't exist.
-    ignoreIfNotExists: Undefinedable(bool),
+    ignoreIfNotExists: ?bool = null,
 };
 
 /// Delete file operation
@@ -416,10 +417,10 @@ pub const DeleteFile = struct {
     uri: []const u8,
 
     /// Delete options.
-    options: Undefinedable(DeleteFileOptions),
+    options: ?DeleteFileOptions = null,
 
     /// An optional annotation identifier describing the operation.
-    annotationId: Undefinedable([]const u8),
+    annotationId: ?[]const u8 = null,
 };
 
 /// A workspace edit represents changes to many resources managed in the workspace. The edit
@@ -427,22 +428,22 @@ pub const DeleteFile = struct {
 /// they are preferred over `changes` if the client can handle versioned document edits.
 pub const WorkspaceEdit = struct {
     /// Holds changes to existing resources.
-    changes: Undefinedable(ManuallyTranslateValue),
+    changes: ?ManuallyTranslateValue = null,
 
     /// Depending on the client capability `workspace.workspaceEdit.resourceOperations` document changes
     /// are either an array of `TextDocumentEdit`s to express changes to n different text documents
     /// where each text document edit addresses a specific version of a text document. Or it can contain
     /// above `TextDocumentEdit`s mixed with create, rename and delete file / folder operations.
-    documentChanges: Undefinedable([]union(enum) {
+    documentChanges: ?[]union(enum) {
         TextDocumentEdit: TextDocumentEdit,
         CreateFile: CreateFile,
         RenameFile: RenameFile,
         DeleteFile: DeleteFile,
-    }),
+    } = null,
 
     /// A map of change annotations that can be referenced in `AnnotatedTextEdit`s or create, rename and
     /// delete file / folder operations.
-    changeAnnotations: Undefinedable(ManuallyTranslateValue),
+    changeAnnotations: ?ManuallyTranslateValue = null,
 };
 
 /// A change to capture text edits for existing resources.
@@ -588,79 +589,79 @@ pub const CompletionItem = struct {
 
     /// The kind of this completion item. Based of the kind
     /// an icon is chosen by the editor.
-    kind: Undefinedable(CompletionItemKind),
+    kind: ?CompletionItemKind = null,
 
     /// Tags for this completion item.
-    tags: Undefinedable([]1),
+    tags: ?[]1 = null,
 
     /// A human-readable string with additional information
     /// about this item, like type or symbol information.
-    detail: Undefinedable([]const u8),
+    detail: ?[]const u8 = null,
 
     /// A human-readable string that represents a doc-comment.
-    documentation: Undefinedable(union(enum) {
+    documentation: ?union(enum) {
         string: []const u8,
         MarkupContent: MarkupContent,
-    }),
+    } = null,
 
     /// Indicates if this item is deprecated.
-    deprecated: Undefinedable(bool),
+    deprecated: ?bool = null,
 
     /// Select this item when showing.
-    preselect: Undefinedable(bool),
+    preselect: ?bool = null,
 
     /// A string that should be used when comparing this item
     /// with other items. When `falsy` the [label](#CompletionItem.label)
     /// is used.
-    sortText: Undefinedable([]const u8),
+    sortText: ?[]const u8 = null,
 
     /// A string that should be used when filtering a set of
     /// completion items. When `falsy` the [label](#CompletionItem.label)
     /// is used.
-    filterText: Undefinedable([]const u8),
+    filterText: ?[]const u8 = null,
 
     /// A string that should be inserted into a document when selecting
     /// this completion. When `falsy` the [label](#CompletionItem.label)
     /// is used.
-    insertText: Undefinedable([]const u8),
+    insertText: ?[]const u8 = null,
 
     /// The format of the insert text. The format applies to both the `insertText` property
     /// and the `newText` property of a provided `textEdit`. If omitted defaults to
     /// `InsertTextFormat.PlainText`.
-    insertTextFormat: Undefinedable(InsertTextFormat),
+    insertTextFormat: ?InsertTextFormat = null,
 
     /// How whitespace and indentation is handled during completion
     /// item insertion. If ignored the clients default value depends on
     /// the `textDocument.completion.insertTextMode` client capability.
-    insertTextMode: Undefinedable(InsertTextMode),
+    insertTextMode: ?InsertTextMode = null,
 
     /// An [edit](#TextEdit) which is applied to a document when selecting
     /// this completion. When an edit is provided the value of
     /// [insertText](#CompletionItem.insertText) is ignored.
-    textEdit: Undefinedable(union(enum) {
+    textEdit: ?union(enum) {
         TextEdit: TextEdit,
         InsertReplaceEdit: InsertReplaceEdit,
-    }),
+    } = null,
 
     /// An optional array of additional [text edits](#TextEdit) that are applied when
     /// selecting this completion. Edits must not overlap (including the same insert position)
     /// with the main [edit](#CompletionItem.textEdit) nor with themselves.
-    additionalTextEdits: Undefinedable([]TextEdit),
+    additionalTextEdits: ?[]TextEdit = null,
 
     /// An optional set of characters that when pressed while this completion is active will accept it first and
     /// then type that character. *Note* that all commit characters should have `length=1` and that superfluous
     /// characters will be ignored.
-    commitCharacters: Undefinedable([][]const u8),
+    commitCharacters: ?[][]const u8 = null,
 
     /// An optional [command](#Command) that is executed *after* inserting this completion. *Note* that
     /// additional modifications to the current document should be described with the
     /// [additionalTextEdits](#CompletionItem.additionalTextEdits)-property.
-    command: Undefinedable(Command),
+    command: ?Command = null,
 
     /// A data entry field that is preserved on a completion item between
     /// a [CompletionRequest](#CompletionRequest) and a [CompletionResolveRequest]
     /// (#CompletionResolveRequest)
-    data: Undefinedable(std.json.Value),
+    data: ?std.json.Value = null,
 };
 
 /// Represents a collection of [completion items](#CompletionItem) to be presented
@@ -695,7 +696,7 @@ pub const Hover = struct {
     },
 
     /// An optional range
-    range: Undefinedable(Range),
+    range: ?Range = null,
 };
 
 /// Represents a parameter of a callable-signature. A parameter can
@@ -712,10 +713,10 @@ pub const ParameterInformation = struct {
 
     /// The human-readable doc-comment of this signature. Will be shown
     /// in the UI but can be omitted.
-    documentation: Undefinedable(union(enum) {
+    documentation: ?union(enum) {
         string: []const u8,
         MarkupContent: MarkupContent,
-    }),
+    } = null,
 };
 
 /// Represents the signature of something callable. A signature
@@ -728,16 +729,16 @@ pub const SignatureInformation = struct {
 
     /// The human-readable doc-comment of this signature. Will be shown
     /// in the UI but can be omitted.
-    documentation: Undefinedable(union(enum) {
+    documentation: ?union(enum) {
         string: []const u8,
         MarkupContent: MarkupContent,
-    }),
+    } = null,
 
     /// The parameters of this signature.
-    parameters: Undefinedable([]ParameterInformation),
+    parameters: ?[]ParameterInformation = null,
 
     /// The index of the active parameter.
-    activeParameter: Undefinedable(i64),
+    activeParameter: ?i64 = null,
 };
 
 /// Signature help represents the signature of something
@@ -800,7 +801,7 @@ pub const DocumentHighlight = struct {
     range: Range,
 
     /// The highlight kind, default is [text](#DocumentHighlightKind.Text).
-    kind: Undefinedable(DocumentHighlightKind),
+    kind: ?DocumentHighlightKind = null,
 };
 
 /// A symbol kind.
@@ -852,10 +853,10 @@ pub const SymbolInformation = struct {
     kind: SymbolKind,
 
     /// Tags for this completion item.
-    tags: Undefinedable([]1),
+    tags: ?[]1 = null,
 
     /// Indicates if this symbol is deprecated.
-    deprecated: Undefinedable(bool),
+    deprecated: ?bool = null,
 
     /// The location of this symbol. The location's range is used by a tool
     /// to reveal the location in the editor. If the symbol is selected in the
@@ -868,7 +869,7 @@ pub const SymbolInformation = struct {
     /// user interface purposes (e.g. to render a qualifier in the user interface
     /// if necessary). It can't be used to re-infer a hierarchy for the document
     /// symbols.
-    containerName: Undefinedable([]const u8),
+    containerName: ?[]const u8 = null,
 };
 
 /// Represents programming constructs like variables, classes, interfaces etc.
@@ -881,16 +882,16 @@ pub const DocumentSymbol = struct {
     name: []const u8,
 
     /// More detail for this symbol, e.g the signature of a function.
-    detail: Undefinedable([]const u8),
+    detail: ?[]const u8 = null,
 
     /// The kind of this symbol.
     kind: SymbolKind,
 
     /// Tags for this completion item.
-    tags: Undefinedable([]1),
+    tags: ?[]1 = null,
 
     /// Indicates if this symbol is deprecated.
-    deprecated: Undefinedable(bool),
+    deprecated: ?bool = null,
 
     /// The range enclosing this symbol not including leading/trailing whitespace but everything else
     /// like comments. This information is typically used to determine if the the clients cursor is
@@ -902,7 +903,7 @@ pub const DocumentSymbol = struct {
     selectionRange: Range,
 
     /// Children of this symbol, e.g. properties of a class.
-    children: Undefinedable([]DocumentSymbol),
+    children: ?[]DocumentSymbol = null,
 };
 
 /// A set of predefined code action kinds
@@ -938,7 +939,7 @@ pub const CodeActionContext = struct {
     diagnostics: []Diagnostic,
 
     /// Requested kind of actions to return.
-    only: Undefinedable([][]const u8),
+    only: ?[][]const u8 = null,
 };
 
 /// A code action represents a change that can be performed in code, e.g. to fix a problem or
@@ -948,32 +949,32 @@ pub const CodeAction = struct {
     title: []const u8,
 
     /// The kind of the code action.
-    kind: Undefinedable([]const u8),
+    kind: ?[]const u8 = null,
 
     /// The diagnostics that this code action resolves.
-    diagnostics: Undefinedable([]Diagnostic),
+    diagnostics: ?[]Diagnostic = null,
 
     /// Marks this as a preferred action. Preferred actions are used by the `auto fix` command and can be targeted
     /// by keybindings.
-    isPreferred: Undefinedable(bool),
+    isPreferred: ?bool = null,
 
     /// Marks that the code action cannot currently be applied.
-    disabled: Undefinedable(struct {
+    disabled: ?struct {
         /// Human readable description of why the code action is currently disabled.
         reason: []const u8,
-    }),
+    } = null,
 
     /// The workspace edit this code action performs.
-    edit: Undefinedable(WorkspaceEdit),
+    edit: ?WorkspaceEdit = null,
 
     /// A command this code action executes. If a code action
     /// provides a edit and a command, first the edit is
     /// executed and then the command.
-    command: Undefinedable(Command),
+    command: ?Command = null,
 
     /// A data entry field that is preserved on a code action between
     /// a `textDocument/codeAction` and a `codeAction/resolve` request.
-    data: Undefinedable(std.json.Value),
+    data: ?std.json.Value = null,
 };
 
 /// A code lens represents a [command](#Command) that should be shown along with
@@ -983,12 +984,12 @@ pub const CodeLens = struct {
     range: Range,
 
     /// The command this code lens represents.
-    command: Undefinedable(Command),
+    command: ?Command = null,
 
     /// A data entry field that is preserved on a code lens item between
     /// a [CodeLensRequest](#CodeLensRequest) and a [CodeLensResolveRequest]
     /// (#CodeLensResolveRequest)
-    data: Undefinedable(std.json.Value),
+    data: ?std.json.Value = null,
 };
 
 /// Value-object describing what options formatting should use.
@@ -1000,13 +1001,13 @@ pub const FormattingOptions = struct {
     insertSpaces: bool,
 
     /// Trim trailing whitespaces on a line.
-    trimTrailingWhitespace: Undefinedable(bool),
+    trimTrailingWhitespace: ?bool = null,
 
     /// Insert a newline character at the end of the file if one does not exist.
-    insertFinalNewline: Undefinedable(bool),
+    insertFinalNewline: ?bool = null,
 
     /// Trim all newlines after the final newline at the end of the file.
-    trimFinalNewlines: Undefinedable(bool),
+    trimFinalNewlines: ?bool = null,
 };
 
 /// A document link is a range in a text document that links to an internal or external resource, like another
@@ -1016,14 +1017,14 @@ pub const DocumentLink = struct {
     range: Range,
 
     /// The uri this link points to.
-    target: Undefinedable([]const u8),
+    target: ?[]const u8 = null,
 
     /// The tooltip text when you hover over this link.
-    tooltip: Undefinedable([]const u8),
+    tooltip: ?[]const u8 = null,
 
     /// A data entry field that is preserved on a document link between a
     /// DocumentLinkRequest and a DocumentLinkResolveRequest.
-    data: Undefinedable(std.json.Value),
+    data: ?std.json.Value = null,
 };
 
 /// A selection range represents a part of a selection hierarchy. A selection range
@@ -1033,7 +1034,7 @@ pub const SelectionRange = struct {
     range: Range,
 
     /// The parent selection range containing this range. Therefore `parent.range` must contain `this.range`.
-    parent: Undefinedable(SelectionRange),
+    parent: ?SelectionRange = null,
 };
 
 /// Represents programming constructs like functions or constructors in the context
@@ -1046,10 +1047,10 @@ pub const CallHierarchyItem = struct {
     kind: SymbolKind,
 
     /// Tags for this item.
-    tags: Undefinedable([]1),
+    tags: ?[]1 = null,
 
     /// More detail for this item, e.g. the signature of a function.
-    detail: Undefinedable([]const u8),
+    detail: ?[]const u8 = null,
 
     /// The resource identifier of this item.
     uri: []const u8,
@@ -1063,7 +1064,7 @@ pub const CallHierarchyItem = struct {
 
     /// A data entry field that is preserved between a call hierarchy prepare and
     /// incoming calls or outgoing calls requests.
-    data: Undefinedable(std.json.Value),
+    data: ?std.json.Value = null,
 };
 
 /// Represents an incoming call, e.g. a caller of a method or constructor.
@@ -1107,41 +1108,41 @@ pub const TextDocument = struct {
 };
 pub const WorkspaceFoldersClientCapabilities = struct {
     /// The workspace client capabilities
-    workspace: Undefinedable(struct {
+    workspace: ?struct {
         /// The client has support for workspace folders
-        workspaceFolders: Undefinedable(bool),
-    }),
+        workspaceFolders: ?bool = null,
+    } = null,
 };
 pub const ConfigurationClientCapabilities = struct {
     /// The workspace client capabilities
-    workspace: Undefinedable(struct {
+    workspace: ?struct {
         /// The client supports `workspace/configuration` requests.
-        configuration: Undefinedable(bool),
-    }),
+        configuration: ?bool = null,
+    } = null,
 };
 pub const WorkDoneProgressClientCapabilities = struct {
     /// Window specific client capabilities.
-    window: Undefinedable(struct {
+    window: ?struct {
         /// Whether client supports server initiated progress using the
         /// `window/workDoneProgress/create` request.
-        workDoneProgress: Undefinedable(bool),
-    }),
+        workDoneProgress: ?bool = null,
+    } = null,
 };
 pub const WorkspaceFoldersServerCapabilities = struct {
     /// The workspace server capabilities
-    workspace: Undefinedable(struct {
-        workspaceFolders: Undefinedable(struct {
+    workspace: ?struct {
+        workspaceFolders: ?struct {
             /// Whether the server wants to receive workspace folder
             /// change notifications.
-            changeNotifications: Undefinedable(union(enum) {
+            changeNotifications: ?union(enum) {
                 string: []const u8,
                 boolean: bool,
-            }),
+            } = null,
 
             /// The Server has support for workspace folders
-            supported: Undefinedable(bool),
-        }),
-    }),
+            supported: ?bool = null,
+        } = null,
+    } = null,
 };
 pub const WorkspaceFoldersInitializeParams = struct {
     /// The actual configured workspace folders.
@@ -1154,7 +1155,7 @@ pub const ProgressToken = union(enum) {
 pub const SemanticTokensWorkspaceClientCapabilities = struct {
     /// Whether the client implementation supports a refresh request sent from
     /// the server to the client.
-    refreshSupport: Undefinedable(bool),
+    refreshSupport: ?bool = null,
 };
 
 /// Since 3.6.0
@@ -1162,32 +1163,32 @@ pub const TypeDefinitionClientCapabilities = struct {
     /// Whether implementation supports dynamic registration. If this is set to `true`
     /// the client supports the new `TypeDefinitionRegistrationOptions` return value
     /// for the corresponding server capability as well.
-    dynamicRegistration: Undefinedable(bool),
+    dynamicRegistration: ?bool = null,
 
     /// The client supports additional metadata in the form of definition links.
-    linkSupport: Undefinedable(bool),
+    linkSupport: ?bool = null,
 };
 pub const ImplementationClientCapabilities = struct {
     /// Whether implementation supports dynamic registration. If this is set to `true`
     /// the client supports the new `ImplementationRegistrationOptions` return value
     /// for the corresponding server capability as well.
-    dynamicRegistration: Undefinedable(bool),
+    dynamicRegistration: ?bool = null,
 
     /// The client supports additional metadata in the form of definition links.
-    linkSupport: Undefinedable(bool),
+    linkSupport: ?bool = null,
 };
 pub const DocumentColorClientCapabilities = struct {
     /// Whether implementation supports dynamic registration. If this is set to `true`
     /// the client supports the new `DocumentColorRegistrationOptions` return value
     /// for the corresponding server capability as well.
-    dynamicRegistration: Undefinedable(bool),
+    dynamicRegistration: ?bool = null,
 };
 
 /// A filter to describe in which file operation requests or notifications
 /// the server is interested in.
 pub const FileOperationFilter = struct {
     /// A Uri like `file` or `untitled`.
-    scheme: Undefinedable([]const u8),
+    scheme: ?[]const u8 = null,
 
     /// The actual file operation pattern.
     pattern: FileOperationPattern,
@@ -1222,10 +1223,10 @@ pub const FileOperationPattern = struct {
     glob: []const u8,
 
     /// Whether to match files or folders with this pattern.
-    matches: Undefinedable(FileOperationPatternKind),
+    matches: ?FileOperationPatternKind = null,
 
     /// Additional options used during matching.
-    options: Undefinedable(FileOperationPatternOptions),
+    options: ?FileOperationPatternOptions = null,
 };
 pub fn Event(comptime T: type) type {
     return struct {};
@@ -1237,7 +1238,7 @@ pub const ResourceOperation = struct {
     kind: []const u8,
 
     /// An optional annotation identifier describing the operation.
-    annotationId: Undefinedable([]const u8),
+    annotationId: ?[]const u8 = null,
 };
 pub const Disposable = struct {};
 pub fn ResponseErrorLiteral(comptime D: type) type {
@@ -1250,7 +1251,7 @@ pub fn ResponseErrorLiteral(comptime D: type) type {
 
         /// A Primitive or Structured value that contains additional
         /// information about the error. Can be omitted.
-        data: Undefinedable(D),
+        data: ?D = null,
     };
 }
 
@@ -1263,30 +1264,30 @@ pub const DocumentFilter = union(enum) {
         language: []const u8,
 
         /// A glob pattern, like `*.{ts,js}`.
-        pattern: Undefinedable([]const u8),
+        pattern: ?[]const u8 = null,
 
         /// A Uri [scheme](#Uri.scheme), like `file` or `untitled`.
-        scheme: Undefinedable([]const u8),
+        scheme: ?[]const u8 = null,
     },
     reflection: struct {
         /// A language id, like `typescript`.
-        language: Undefinedable([]const u8),
+        language: ?[]const u8 = null,
 
         /// A glob pattern, like `*.{ts,js}`.
-        pattern: Undefinedable([]const u8),
+        pattern: ?[]const u8 = null,
 
         /// A Uri [scheme](#Uri.scheme), like `file` or `untitled`.
         scheme: []const u8,
     },
     reflection: struct {
         /// A language id, like `typescript`.
-        language: Undefinedable([]const u8),
+        language: ?[]const u8 = null,
 
         /// A glob pattern, like `*.{ts,js}`.
         pattern: []const u8,
 
         /// A Uri [scheme](#Uri.scheme), like `file` or `untitled`.
-        scheme: Undefinedable([]const u8),
+        scheme: ?[]const u8 = null,
     },
 };
 
@@ -1306,7 +1307,7 @@ pub const Registration = struct {
     method: []const u8,
 
     /// Options necessary for the registration.
-    registerOptions: Undefinedable(std.json.Value),
+    registerOptions: ?std.json.Value = null,
 };
 pub const RegistrationParams = struct {
     registrations: []Registration,
@@ -1316,6 +1317,7 @@ pub const RegistrationParams = struct {
 /// handler on the client side.
 pub const RegistrationRequest = struct {
     comptime method: []const u8 = "client/registerCapability",
+    id: RequestId,
     params: RegistrationParams,
 };
 
@@ -1336,16 +1338,17 @@ pub const UnregistrationParams = struct {
 /// handler on the client side.
 pub const UnregistrationRequest = struct {
     comptime method: []const u8 = "client/unregisterCapability",
+    id: RequestId,
     params: UnregistrationParams,
 };
 pub const WorkDoneProgressParams = struct {
     /// An optional token that a server can use to report work done progress.
-    workDoneToken: Undefinedable(ProgressToken),
+    workDoneToken: ?ProgressToken = null,
 };
 pub const PartialResultParams = struct {
     /// An optional token that a server can use to report partial results (e.g. streaming) to
     /// the client.
-    partialResultToken: Undefinedable(ProgressToken),
+    partialResultToken: ?ProgressToken = null,
 };
 
 /// A parameter literal used in requests to pass a text document and a position inside that
@@ -1386,111 +1389,111 @@ pub const WorkspaceClientCapabilities = struct {
     /// The client supports applying batch edits
     /// to the workspace by supporting the request
     /// 'workspace/applyEdit'
-    applyEdit: Undefinedable(bool),
+    applyEdit: ?bool = null,
 
     /// Capabilities specific to `WorkspaceEdit`s
-    workspaceEdit: Undefinedable(WorkspaceEditClientCapabilities),
+    workspaceEdit: ?WorkspaceEditClientCapabilities = null,
 
     /// Capabilities specific to the `workspace/didChangeConfiguration` notification.
-    didChangeConfiguration: Undefinedable(DidChangeConfigurationClientCapabilities),
+    didChangeConfiguration: ?DidChangeConfigurationClientCapabilities = null,
 
     /// Capabilities specific to the `workspace/didChangeWatchedFiles` notification.
-    didChangeWatchedFiles: Undefinedable(DidChangeWatchedFilesClientCapabilities),
+    didChangeWatchedFiles: ?DidChangeWatchedFilesClientCapabilities = null,
 
     /// Capabilities specific to the `workspace/symbol` request.
-    symbol: Undefinedable(WorkspaceSymbolClientCapabilities),
+    symbol: ?WorkspaceSymbolClientCapabilities = null,
 
     /// Capabilities specific to the `workspace/executeCommand` request.
-    executeCommand: Undefinedable(ExecuteCommandClientCapabilities),
+    executeCommand: ?ExecuteCommandClientCapabilities = null,
 
     /// Capabilities specific to the semantic token requests scoped to the
     /// workspace.
-    semanticTokens: Undefinedable(SemanticTokensWorkspaceClientCapabilities),
+    semanticTokens: ?SemanticTokensWorkspaceClientCapabilities = null,
 
     /// Capabilities specific to the code lens requests scoped to the
     /// workspace.
-    codeLens: Undefinedable(CodeLensWorkspaceClientCapabilities),
+    codeLens: ?CodeLensWorkspaceClientCapabilities = null,
 
     /// The client has support for file notifications/requests for user operations on files.
-    fileOperations: Undefinedable(FileOperationClientCapabilities),
+    fileOperations: ?FileOperationClientCapabilities = null,
 };
 
 /// Text document specific client capabilities.
 pub const TextDocumentClientCapabilities = struct {
     /// Defines which synchronization capabilities the client supports.
-    synchronization: Undefinedable(TextDocumentSyncClientCapabilities),
+    synchronization: ?TextDocumentSyncClientCapabilities = null,
 
     /// Capabilities specific to the `textDocument/completion`
-    completion: Undefinedable(CompletionClientCapabilities),
+    completion: ?CompletionClientCapabilities = null,
 
     /// Capabilities specific to the `textDocument/hover`
-    hover: Undefinedable(HoverClientCapabilities),
+    hover: ?HoverClientCapabilities = null,
 
     /// Capabilities specific to the `textDocument/signatureHelp`
-    signatureHelp: Undefinedable(SignatureHelpClientCapabilities),
+    signatureHelp: ?SignatureHelpClientCapabilities = null,
 
     /// Capabilities specific to the `textDocument/declaration`
-    declaration: Undefinedable(DeclarationClientCapabilities),
+    declaration: ?DeclarationClientCapabilities = null,
 
     /// Capabilities specific to the `textDocument/definition`
-    definition: Undefinedable(DefinitionClientCapabilities),
+    definition: ?DefinitionClientCapabilities = null,
 
     /// Capabilities specific to the `textDocument/typeDefinition`
-    typeDefinition: Undefinedable(TypeDefinitionClientCapabilities),
+    typeDefinition: ?TypeDefinitionClientCapabilities = null,
 
     /// Capabilities specific to the `textDocument/implementation`
-    implementation: Undefinedable(ImplementationClientCapabilities),
+    implementation: ?ImplementationClientCapabilities = null,
 
     /// Capabilities specific to the `textDocument/references`
-    references: Undefinedable(ReferenceClientCapabilities),
+    references: ?ReferenceClientCapabilities = null,
 
     /// Capabilities specific to the `textDocument/documentHighlight`
-    documentHighlight: Undefinedable(DocumentHighlightClientCapabilities),
+    documentHighlight: ?DocumentHighlightClientCapabilities = null,
 
     /// Capabilities specific to the `textDocument/documentSymbol`
-    documentSymbol: Undefinedable(DocumentSymbolClientCapabilities),
+    documentSymbol: ?DocumentSymbolClientCapabilities = null,
 
     /// Capabilities specific to the `textDocument/codeAction`
-    codeAction: Undefinedable(CodeActionClientCapabilities),
+    codeAction: ?CodeActionClientCapabilities = null,
 
     /// Capabilities specific to the `textDocument/codeLens`
-    codeLens: Undefinedable(CodeLensClientCapabilities),
+    codeLens: ?CodeLensClientCapabilities = null,
 
     /// Capabilities specific to the `textDocument/documentLink`
-    documentLink: Undefinedable(DocumentLinkClientCapabilities),
+    documentLink: ?DocumentLinkClientCapabilities = null,
 
     /// Capabilities specific to the `textDocument/documentColor`
-    colorProvider: Undefinedable(DocumentColorClientCapabilities),
+    colorProvider: ?DocumentColorClientCapabilities = null,
 
     /// Capabilities specific to the `textDocument/formatting`
-    formatting: Undefinedable(DocumentFormattingClientCapabilities),
+    formatting: ?DocumentFormattingClientCapabilities = null,
 
     /// Capabilities specific to the `textDocument/rangeFormatting`
-    rangeFormatting: Undefinedable(DocumentRangeFormattingClientCapabilities),
+    rangeFormatting: ?DocumentRangeFormattingClientCapabilities = null,
 
     /// Capabilities specific to the `textDocument/onTypeFormatting`
-    onTypeFormatting: Undefinedable(DocumentOnTypeFormattingClientCapabilities),
+    onTypeFormatting: ?DocumentOnTypeFormattingClientCapabilities = null,
 
     /// Capabilities specific to the `textDocument/rename`
-    rename: Undefinedable(RenameClientCapabilities),
+    rename: ?RenameClientCapabilities = null,
 
     /// Capabilities specific to `textDocument/foldingRange` request.
-    foldingRange: Undefinedable(FoldingRangeClientCapabilities),
+    foldingRange: ?FoldingRangeClientCapabilities = null,
 
     /// Capabilities specific to `textDocument/selectionRange` request.
-    selectionRange: Undefinedable(SelectionRangeClientCapabilities),
+    selectionRange: ?SelectionRangeClientCapabilities = null,
 
     /// Capabilities specific to `textDocument/publishDiagnostics` notification.
-    publishDiagnostics: Undefinedable(PublishDiagnosticsClientCapabilities),
+    publishDiagnostics: ?PublishDiagnosticsClientCapabilities = null,
 
     /// Capabilities specific to the various call hierarchy request.
-    callHierarchy: Undefinedable(CallHierarchyClientCapabilities),
+    callHierarchy: ?CallHierarchyClientCapabilities = null,
 
     /// Capabilities specific to the various semantic token request.
-    semanticTokens: Undefinedable(SemanticTokensClientCapabilities),
+    semanticTokens: ?SemanticTokensClientCapabilities = null,
 
     /// Capabilities specific to the linked editing range request.
-    linkedEditingRange: Undefinedable(LinkedEditingRangeClientCapabilities),
+    linkedEditingRange: ?LinkedEditingRangeClientCapabilities = null,
 
     /// Client capabilities specific to the moniker request.
     moniker: MonikerClientCapabilities,
@@ -1499,13 +1502,13 @@ pub const WindowClientCapabilities = struct {
     /// Whether client supports handling progress notifications. If set
     /// servers are allowed to report in `workDoneProgress` property in the
     /// request specific server capabilities.
-    workDoneProgress: Undefinedable(bool),
+    workDoneProgress: ?bool = null,
 
     /// Capabilities specific to the showMessage request.
-    showMessage: Undefinedable(ShowMessageRequestClientCapabilities),
+    showMessage: ?ShowMessageRequestClientCapabilities = null,
 
     /// Capabilities specific to the showDocument request.
-    showDocument: Undefinedable(ShowDocumentClientCapabilities),
+    showDocument: ?ShowDocumentClientCapabilities = null,
 };
 
 /// Client capabilities specific to regular expressions.
@@ -1514,7 +1517,7 @@ pub const RegularExpressionsClientCapabilities = struct {
     engine: []const u8,
 
     /// The engine's version.
-    version: Undefinedable([]const u8),
+    version: ?[]const u8 = null,
 };
 
 /// Client capabilities specific to the used markdown parser.
@@ -1523,51 +1526,51 @@ pub const MarkdownClientCapabilities = struct {
     parser: []const u8,
 
     /// The version of the parser.
-    version: Undefinedable([]const u8),
+    version: ?[]const u8 = null,
 };
 
 /// General client capabilities.
 pub const GeneralClientCapabilities = struct {
     /// Client capabilities specific to regular expressions.
-    regularExpressions: Undefinedable(RegularExpressionsClientCapabilities),
+    regularExpressions: ?RegularExpressionsClientCapabilities = null,
 
     /// Client capabilities specific to the client's markdown parser.
-    markdown: Undefinedable(MarkdownClientCapabilities),
+    markdown: ?MarkdownClientCapabilities = null,
 };
 pub const ClientCapabilities = struct {
     /// Workspace specific client capabilities.
-    workspace: Undefinedable(WorkspaceClientCapabilities),
+    workspace: ?WorkspaceClientCapabilities = null,
 
     /// Text document specific client capabilities.
-    textDocument: Undefinedable(TextDocumentClientCapabilities),
+    textDocument: ?TextDocumentClientCapabilities = null,
 
     /// Window specific client capabilities.
-    window: Undefinedable(WindowClientCapabilities),
+    window: ?WindowClientCapabilities = null,
 
     /// General client capabilities.
-    general: Undefinedable(GeneralClientCapabilities),
+    general: ?GeneralClientCapabilities = null,
 
     /// Experimental client capabilities.
-    experimental: Undefinedable(std.json.ObjectMap),
+    experimental: ?std.json.ObjectMap = null,
 
     /// The workspace client capabilities
-    workspace: Undefinedable(struct {
+    workspace: ?struct {
         /// The client has support for workspace folders
-        workspaceFolders: Undefinedable(bool),
-    }),
+        workspaceFolders: ?bool = null,
+    } = null,
 
     /// The workspace client capabilities
-    workspace: Undefinedable(struct {
+    workspace: ?struct {
         /// The client supports `workspace/configuration` requests.
-        configuration: Undefinedable(bool),
-    }),
+        configuration: ?bool = null,
+    } = null,
 
     /// Window specific client capabilities.
-    window: Undefinedable(struct {
+    window: ?struct {
         /// Whether client supports server initiated progress using the
         /// `window/workDoneProgress/create` request.
-        workDoneProgress: Undefinedable(bool),
-    }),
+        workDoneProgress: ?bool = null,
+    } = null,
 };
 
 /// Static registration options to be returned in the initialize
@@ -1575,7 +1578,7 @@ pub const ClientCapabilities = struct {
 pub const StaticRegistrationOptions = struct {
     /// The id used to register the request. The id can be used to deregister
     /// the request again. See also Registration#id.
-    id: Undefinedable([]const u8),
+    id: ?[]const u8 = null,
 };
 
 /// General text document registration options.
@@ -1588,193 +1591,193 @@ pub const TextDocumentRegistrationOptions = struct {
 /// Save options.
 pub const SaveOptions = struct {
     /// The client is supposed to include the content on save.
-    includeText: Undefinedable(bool),
+    includeText: ?bool = null,
 };
 pub const WorkDoneProgressOptions = struct {
-    workDoneProgress: Undefinedable(bool),
+    workDoneProgress: ?bool = null,
 };
 pub const ServerCapabilities = struct {
     /// Defines how text documents are synced. Is either a detailed structure defining each notification or
     /// for backwards compatibility the TextDocumentSyncKind number.
-    textDocumentSync: Undefinedable(union(enum) {
+    textDocumentSync: ?union(enum) {
         TextDocumentSyncOptions: TextDocumentSyncOptions,
         TextDocumentSyncKind: TextDocumentSyncKind,
-    }),
+    } = null,
 
     /// The server provides completion support.
-    completionProvider: Undefinedable(CompletionOptions),
+    completionProvider: ?CompletionOptions = null,
 
     /// The server provides hover support.
-    hoverProvider: Undefinedable(union(enum) {
+    hoverProvider: ?union(enum) {
         boolean: bool,
         HoverOptions: HoverOptions,
-    }),
+    } = null,
 
     /// The server provides signature help support.
-    signatureHelpProvider: Undefinedable(SignatureHelpOptions),
+    signatureHelpProvider: ?SignatureHelpOptions = null,
 
     /// The server provides Goto Declaration support.
-    declarationProvider: Undefinedable(union(enum) {
+    declarationProvider: ?union(enum) {
         boolean: bool,
         DeclarationOptions: DeclarationOptions,
         DeclarationRegistrationOptions: DeclarationRegistrationOptions,
-    }),
+    } = null,
 
     /// The server provides goto definition support.
-    definitionProvider: Undefinedable(union(enum) {
+    definitionProvider: ?union(enum) {
         boolean: bool,
         DefinitionOptions: DefinitionOptions,
-    }),
+    } = null,
 
     /// The server provides Goto Type Definition support.
-    typeDefinitionProvider: Undefinedable(union(enum) {
+    typeDefinitionProvider: ?union(enum) {
         boolean: bool,
         TypeDefinitionOptions: TypeDefinitionOptions,
         TypeDefinitionRegistrationOptions: TypeDefinitionRegistrationOptions,
-    }),
+    } = null,
 
     /// The server provides Goto Implementation support.
-    implementationProvider: Undefinedable(union(enum) {
+    implementationProvider: ?union(enum) {
         boolean: bool,
         ImplementationOptions: ImplementationOptions,
         ImplementationRegistrationOptions: ImplementationRegistrationOptions,
-    }),
+    } = null,
 
     /// The server provides find references support.
-    referencesProvider: Undefinedable(union(enum) {
+    referencesProvider: ?union(enum) {
         boolean: bool,
         ReferenceOptions: ReferenceOptions,
-    }),
+    } = null,
 
     /// The server provides document highlight support.
-    documentHighlightProvider: Undefinedable(union(enum) {
+    documentHighlightProvider: ?union(enum) {
         boolean: bool,
         DocumentHighlightOptions: DocumentHighlightOptions,
-    }),
+    } = null,
 
     /// The server provides document symbol support.
-    documentSymbolProvider: Undefinedable(union(enum) {
+    documentSymbolProvider: ?union(enum) {
         boolean: bool,
         DocumentSymbolOptions: DocumentSymbolOptions,
-    }),
+    } = null,
 
     /// The server provides code actions. CodeActionOptions may only be
     /// specified if the client states that it supports
     /// `codeActionLiteralSupport` in its initial `initialize` request.
-    codeActionProvider: Undefinedable(union(enum) {
+    codeActionProvider: ?union(enum) {
         boolean: bool,
         CodeActionOptions: CodeActionOptions,
-    }),
+    } = null,
 
     /// The server provides code lens.
-    codeLensProvider: Undefinedable(CodeLensOptions),
+    codeLensProvider: ?CodeLensOptions = null,
 
     /// The server provides document link support.
-    documentLinkProvider: Undefinedable(DocumentLinkOptions),
+    documentLinkProvider: ?DocumentLinkOptions = null,
 
     /// The server provides color provider support.
-    colorProvider: Undefinedable(union(enum) {
+    colorProvider: ?union(enum) {
         boolean: bool,
         DocumentColorOptions: DocumentColorOptions,
         DocumentColorRegistrationOptions: DocumentColorRegistrationOptions,
-    }),
+    } = null,
 
     /// The server provides workspace symbol support.
-    workspaceSymbolProvider: Undefinedable(union(enum) {
+    workspaceSymbolProvider: ?union(enum) {
         boolean: bool,
         WorkspaceSymbolOptions: WorkspaceSymbolOptions,
-    }),
+    } = null,
 
     /// The server provides document formatting.
-    documentFormattingProvider: Undefinedable(union(enum) {
+    documentFormattingProvider: ?union(enum) {
         boolean: bool,
         DocumentFormattingOptions: DocumentFormattingOptions,
-    }),
+    } = null,
 
     /// The server provides document range formatting.
-    documentRangeFormattingProvider: Undefinedable(union(enum) {
+    documentRangeFormattingProvider: ?union(enum) {
         boolean: bool,
         DocumentRangeFormattingOptions: DocumentRangeFormattingOptions,
-    }),
+    } = null,
 
     /// The server provides document formatting on typing.
-    documentOnTypeFormattingProvider: Undefinedable(DocumentOnTypeFormattingOptions),
+    documentOnTypeFormattingProvider: ?DocumentOnTypeFormattingOptions = null,
 
     /// The server provides rename support. RenameOptions may only be
     /// specified if the client states that it supports
     /// `prepareSupport` in its initial `initialize` request.
-    renameProvider: Undefinedable(union(enum) {
+    renameProvider: ?union(enum) {
         boolean: bool,
         RenameOptions: RenameOptions,
-    }),
+    } = null,
 
     /// The server provides folding provider support.
-    foldingRangeProvider: Undefinedable(union(enum) {
+    foldingRangeProvider: ?union(enum) {
         boolean: bool,
         FoldingRangeOptions: FoldingRangeOptions,
         FoldingRangeRegistrationOptions: FoldingRangeRegistrationOptions,
-    }),
+    } = null,
 
     /// The server provides selection range support.
-    selectionRangeProvider: Undefinedable(union(enum) {
+    selectionRangeProvider: ?union(enum) {
         boolean: bool,
         SelectionRangeOptions: SelectionRangeOptions,
         SelectionRangeRegistrationOptions: SelectionRangeRegistrationOptions,
-    }),
+    } = null,
 
     /// The server provides execute command support.
-    executeCommandProvider: Undefinedable(ExecuteCommandOptions),
+    executeCommandProvider: ?ExecuteCommandOptions = null,
 
     /// The server provides call hierarchy support.
-    callHierarchyProvider: Undefinedable(union(enum) {
+    callHierarchyProvider: ?union(enum) {
         boolean: bool,
         CallHierarchyOptions: CallHierarchyOptions,
         CallHierarchyRegistrationOptions: CallHierarchyRegistrationOptions,
-    }),
+    } = null,
 
     /// The server provides linked editing range support.
-    linkedEditingRangeProvider: Undefinedable(union(enum) {
+    linkedEditingRangeProvider: ?union(enum) {
         boolean: bool,
         LinkedEditingRangeOptions: LinkedEditingRangeOptions,
         LinkedEditingRangeRegistrationOptions: LinkedEditingRangeRegistrationOptions,
-    }),
+    } = null,
 
     /// The server provides semantic tokens support.
-    semanticTokensProvider: Undefinedable(union(enum) {
+    semanticTokensProvider: ?union(enum) {
         SemanticTokensOptions: SemanticTokensOptions,
         SemanticTokensRegistrationOptions: SemanticTokensRegistrationOptions,
-    }),
+    } = null,
 
     /// Window specific server capabilities.
-    workspace: Undefinedable(struct {
+    workspace: ?struct {
         /// The server is interested in notifications/requests for operations on files.
-        fileOperations: Undefinedable(FileOperationOptions),
-    }),
+        fileOperations: ?FileOperationOptions = null,
+    } = null,
 
     /// The server provides moniker support.
-    monikerProvider: Undefinedable(union(enum) {
+    monikerProvider: ?union(enum) {
         boolean: bool,
         MonikerOptions: MonikerOptions,
         MonikerRegistrationOptions: MonikerRegistrationOptions,
-    }),
+    } = null,
 
     /// Experimental server capabilities.
-    experimental: Undefinedable(T),
+    experimental: ?T = null,
 
     /// The workspace server capabilities
-    workspace: Undefinedable(struct {
-        workspaceFolders: Undefinedable(struct {
+    workspace: ?struct {
+        workspaceFolders: ?struct {
             /// Whether the server wants to receive workspace folder
             /// change notifications.
-            changeNotifications: Undefinedable(union(enum) {
+            changeNotifications: ?union(enum) {
                 string: []const u8,
                 boolean: bool,
-            }),
+            } = null,
 
             /// The Server has support for workspace folders
-            supported: Undefinedable(bool),
-        }),
-    }),
+            supported: ?bool = null,
+        } = null,
+    } = null,
 };
 
 /// The initialize request is sent from the client to the server.
@@ -1784,6 +1787,7 @@ pub const ServerCapabilities = struct {
 /// resolves to such.
 pub const InitializeRequest = struct {
     comptime method: []const u8 = "initialize",
+    id: RequestId,
     params: InitializeParams,
 };
 pub const InitializeParams = struct {
@@ -1792,22 +1796,22 @@ pub const InitializeParams = struct {
     processId: ?i64,
 
     /// Information about the client
-    clientInfo: Undefinedable(struct {
+    clientInfo: ?struct {
         /// The name of the client as defined by the client.
         name: []const u8,
 
         /// The client's version as defined by the client.
-        version: Undefinedable([]const u8),
-    }),
+        version: ?[]const u8 = null,
+    } = null,
 
     /// The locale the client is currently showing the user interface
     /// in. This must not necessarily be the locale of the operating
     /// system.
-    locale: Undefinedable([]const u8),
+    locale: ?[]const u8 = null,
 
     /// The rootPath of the workspace. Is null
     /// if no folder is open.
-    rootPath: Undefinedable(?[]const u8),
+    rootPath: ??[]const u8 = null,
 
     /// The rootUri of the workspace. Is null if no
     /// folder is open. If both `rootPath` and `rootUri` are set
@@ -1818,19 +1822,19 @@ pub const InitializeParams = struct {
     capabilities: ClientCapabilities,
 
     /// User provided initialization options.
-    initializationOptions: Undefinedable(std.json.Value),
+    initializationOptions: ?std.json.Value = null,
 
     /// The initial trace setting. If omitted trace is disabled ('off').
-    trace: Undefinedable(enum {
+    trace: ?enum {
         off,
         messages,
         verbose,
 
         usingnamespace StringBackedEnumStringify(@This());
-    }),
+    } = null,
 
     /// An optional token that a server can use to report work done progress.
-    workDoneToken: Undefinedable(ProgressToken),
+    workDoneToken: ?ProgressToken = null,
 
     /// The actual configured workspace folders.
     workspaceFolders: ?[]WorkspaceFolder,
@@ -1845,13 +1849,13 @@ pub fn InitializeResult(comptime T: type) type {
         ),
 
         /// Information about the server.
-        serverInfo: Undefinedable(struct {
+        serverInfo: ?struct {
             /// The name of the server as defined by the server.
             name: []const u8,
 
             /// The server's version as defined by the server.
-            version: Undefinedable([]const u8),
-        }),
+            version: ?[]const u8 = null,
+        } = null,
     };
 }
 
@@ -1878,6 +1882,7 @@ pub const InitializedParams = struct {};
 /// is allowed to send requests from the server to the client.
 pub const InitializedNotification = struct {
     comptime method: []const u8 = "initialized",
+    id: RequestId,
     params: InitializedParams,
 };
 
@@ -1887,16 +1892,18 @@ pub const InitializedNotification = struct {
 /// is the exit event.
 pub const ShutdownRequest = struct {
     comptime method: []const u8 = "shutdown",
+    id: RequestId,
 };
 
 /// The exit event is sent from the client to the server to
 /// ask the server to exit its process.
 pub const ExitNotification = struct {
     comptime method: []const u8 = "exit",
+    id: RequestId,
 };
 pub const DidChangeConfigurationClientCapabilities = struct {
     /// Did change configuration notification supports dynamic registration.
-    dynamicRegistration: Undefinedable(bool),
+    dynamicRegistration: ?bool = null,
 };
 
 /// The configuration change notification is sent from the client to the server
@@ -1904,13 +1911,14 @@ pub const DidChangeConfigurationClientCapabilities = struct {
 /// the changed configuration as defined by the language client.
 pub const DidChangeConfigurationNotification = struct {
     comptime method: []const u8 = "workspace/didChangeConfiguration",
+    id: RequestId,
     params: DidChangeConfigurationParams,
 };
 pub const DidChangeConfigurationRegistrationOptions = struct {
-    section: Undefinedable(union(enum) {
+    section: ?union(enum) {
         string: []const u8,
         array: [][]const u8,
-    }),
+    } = null,
 };
 
 /// The parameters of a change configuration notification.
@@ -1942,18 +1950,19 @@ pub const ShowMessageParams = struct {
 /// the client to display a particular message in the user interface.
 pub const ShowMessageNotification = struct {
     comptime method: []const u8 = "window/showMessage",
+    id: RequestId,
     params: ShowMessageParams,
 };
 
 /// Show message request client capabilities
 pub const ShowMessageRequestClientCapabilities = struct {
     /// Capabilities specific to the `MessageActionItem` type.
-    messageActionItem: Undefinedable(struct {
+    messageActionItem: ?struct {
         /// Whether the client supports additional attributes which
         /// are preserved and send back to the server in the
         /// request's response.
-        additionalPropertiesSupport: Undefinedable(bool),
-    }),
+        additionalPropertiesSupport: ?bool = null,
+    } = null,
 };
 pub const MessageActionItem = struct {
     /// A short title like 'Retry', 'Open Log' etc.
@@ -1967,13 +1976,14 @@ pub const ShowMessageRequestParams = struct {
     message: []const u8,
 
     /// The message action items to present.
-    actions: Undefinedable([]MessageActionItem),
+    actions: ?[]MessageActionItem = null,
 };
 
 /// The show message request is sent from the server to the client to show a message
 /// and a set of options actions to the user.
 pub const ShowMessageRequest = struct {
     comptime method: []const u8 = "window/showMessageRequest",
+    id: RequestId,
     params: ShowMessageRequestParams,
 };
 
@@ -1981,6 +1991,7 @@ pub const ShowMessageRequest = struct {
 /// the client to log a particular message.
 pub const LogMessageNotification = struct {
     comptime method: []const u8 = "window/logMessage",
+    id: RequestId,
     params: LogMessageParams,
 };
 
@@ -1997,22 +2008,23 @@ pub const LogMessageParams = struct {
 /// the client to log telemetry data.
 pub const TelemetryEventNotification = struct {
     comptime method: []const u8 = "telemetry/event",
+    id: RequestId,
     params: any,
 };
 pub const TextDocumentSyncClientCapabilities = struct {
     /// Whether text document synchronization supports dynamic registration.
-    dynamicRegistration: Undefinedable(bool),
+    dynamicRegistration: ?bool = null,
 
     /// The client supports sending will save notifications.
-    willSave: Undefinedable(bool),
+    willSave: ?bool = null,
 
     /// The client supports sending a will save request and
     /// waits for a response providing text edits which will
     /// be applied to the document before it is saved.
-    willSaveWaitUntil: Undefinedable(bool),
+    willSaveWaitUntil: ?bool = null,
 
     /// The client supports did save notifications.
-    didSave: Undefinedable(bool),
+    didSave: ?bool = null,
 };
 
 /// Defines how the host (editor) should sync
@@ -2027,26 +2039,26 @@ pub const TextDocumentSyncKind = enum(i64) {
 pub const TextDocumentSyncOptions = struct {
     /// Open and close notifications are sent to the server. If omitted open close notification should not
     /// be sent.
-    openClose: Undefinedable(bool),
+    openClose: ?bool = null,
 
     /// Change notifications are sent to the server. See TextDocumentSyncKind.None, TextDocumentSyncKind.Full
     /// and TextDocumentSyncKind.Incremental. If omitted it defaults to TextDocumentSyncKind.None.
-    change: Undefinedable(TextDocumentSyncKind),
+    change: ?TextDocumentSyncKind = null,
 
     /// If present will save notifications are sent to the server. If omitted the notification should not be
     /// sent.
-    willSave: Undefinedable(bool),
+    willSave: ?bool = null,
 
     /// If present will save wait until requests are sent to the server. If omitted the request should not be
     /// sent.
-    willSaveWaitUntil: Undefinedable(bool),
+    willSaveWaitUntil: ?bool = null,
 
     /// If present save notifications are sent to the server. If omitted the notification should not be
     /// sent.
-    save: Undefinedable(union(enum) {
+    save: ?union(enum) {
         boolean: bool,
         SaveOptions: SaveOptions,
-    }),
+    } = null,
 };
 
 /// The parameters send in a open text document notification
@@ -2065,6 +2077,7 @@ pub const DidOpenTextDocumentParams = struct {
 /// is one.
 pub const DidOpenTextDocumentNotification = struct {
     comptime method: []const u8 = "textDocument/didOpen",
+    id: RequestId,
     params: DidOpenTextDocumentParams,
 };
 
@@ -2076,7 +2089,7 @@ pub const TextDocumentContentChangeEvent = union(enum) {
         range: Range,
 
         /// The optional length of the range that got replaced.
-        rangeLength: Undefinedable(i64),
+        rangeLength: ?i64 = null,
 
         /// The new text for the provided range.
         text: []const u8,
@@ -2116,6 +2129,7 @@ pub const TextDocumentChangeRegistrationOptions = struct {
 /// changes to a text document.
 pub const DidChangeTextDocumentNotification = struct {
     comptime method: []const u8 = "textDocument/didChange",
+    id: RequestId,
     params: DidChangeTextDocumentParams,
 };
 
@@ -2134,6 +2148,7 @@ pub const DidCloseTextDocumentParams = struct {
 /// notification requires a previous open notification to be sent.
 pub const DidCloseTextDocumentNotification = struct {
     comptime method: []const u8 = "textDocument/didClose",
+    id: RequestId,
     params: DidCloseTextDocumentParams,
 };
 
@@ -2144,7 +2159,7 @@ pub const DidSaveTextDocumentParams = struct {
 
     /// Optional the content when saved. Depends on the includeText value
     /// when the save notification was requested.
-    text: Undefinedable([]const u8),
+    text: ?[]const u8 = null,
 };
 
 /// Save registration options.
@@ -2154,13 +2169,14 @@ pub const TextDocumentSaveRegistrationOptions = struct {
     documentSelector: ?DocumentSelector,
 
     /// The client is supposed to include the content on save.
-    includeText: Undefinedable(bool),
+    includeText: ?bool = null,
 };
 
 /// The document save notification is sent from the client to the server when
 /// the document got saved in the client.
 pub const DidSaveTextDocumentNotification = struct {
     comptime method: []const u8 = "textDocument/didSave",
+    id: RequestId,
     params: DidSaveTextDocumentParams,
 };
 
@@ -2186,6 +2202,7 @@ pub const WillSaveTextDocumentParams = struct {
 /// the document is actually saved.
 pub const WillSaveTextDocumentNotification = struct {
     comptime method: []const u8 = "textDocument/willSave",
+    id: RequestId,
     params: WillSaveTextDocumentParams,
 };
 
@@ -2197,19 +2214,21 @@ pub const WillSaveTextDocumentNotification = struct {
 /// reliable.
 pub const WillSaveTextDocumentWaitUntilRequest = struct {
     comptime method: []const u8 = "textDocument/willSaveWaitUntil",
+    id: RequestId,
     params: WillSaveTextDocumentParams,
 };
 pub const DidChangeWatchedFilesClientCapabilities = struct {
     /// Did change watched files notification supports dynamic registration. Please note
     /// that the current protocol doesn't support static configuration for file changes
     /// from the server side.
-    dynamicRegistration: Undefinedable(bool),
+    dynamicRegistration: ?bool = null,
 };
 
 /// The watched files notification is sent from the client to the server when
 /// the client detects changes to file watched by the language client.
 pub const DidChangeWatchedFilesNotification = struct {
     comptime method: []const u8 = "workspace/didChangeWatchedFiles",
+    id: RequestId,
     params: DidChangeWatchedFilesParams,
 };
 
@@ -2255,7 +2274,7 @@ pub const FileSystemWatcher = struct {
     /// The kind of events of interest. If omitted it defaults
     /// to WatchKind.Create | WatchKind.Change | WatchKind.Delete
     /// which is 7.
-    kind: Undefinedable(i64),
+    kind: ?i64 = null,
 };
 pub const WatchKind = enum(i64) {
     Create = 1,
@@ -2268,26 +2287,26 @@ pub const WatchKind = enum(i64) {
 /// The publish diagnostic client capabilities.
 pub const PublishDiagnosticsClientCapabilities = struct {
     /// Whether the clients accepts diagnostics with related information.
-    relatedInformation: Undefinedable(bool),
+    relatedInformation: ?bool = null,
 
     /// Client supports the tag property to provide meta data about a diagnostic.
     /// Clients supporting tags have to handle unknown tags gracefully.
-    tagSupport: Undefinedable(struct {
+    tagSupport: ?struct {
         /// The tags supported by the client.
         valueSet: []DiagnosticTag,
-    }),
+    } = null,
 
     /// Whether the client interprets the version property of the
     /// `textDocument/publishDiagnostics` notification`s parameter.
-    versionSupport: Undefinedable(bool),
+    versionSupport: ?bool = null,
 
     /// Client supports a codeDescription property
-    codeDescriptionSupport: Undefinedable(bool),
+    codeDescriptionSupport: ?bool = null,
 
     /// Whether code action supports the `data` property which is
     /// preserved between a `textDocument/publishDiagnostics` and
     /// `textDocument/codeAction` request.
-    dataSupport: Undefinedable(bool),
+    dataSupport: ?bool = null,
 };
 
 /// The publish diagnostic notification's parameters.
@@ -2296,7 +2315,7 @@ pub const PublishDiagnosticsParams = struct {
     uri: []const u8,
 
     /// Optional the version number of the document the diagnostics are published for.
-    version: Undefinedable(i64),
+    version: ?i64 = null,
 
     /// An array of diagnostic information items.
     diagnostics: []Diagnostic,
@@ -2306,77 +2325,78 @@ pub const PublishDiagnosticsParams = struct {
 /// results of validation runs.
 pub const PublishDiagnosticsNotification = struct {
     comptime method: []const u8 = "textDocument/publishDiagnostics",
+    id: RequestId,
     params: PublishDiagnosticsParams,
 };
 
 /// Completion client capabilities
 pub const CompletionClientCapabilities = struct {
     /// Whether completion supports dynamic registration.
-    dynamicRegistration: Undefinedable(bool),
+    dynamicRegistration: ?bool = null,
 
     /// The client supports the following `CompletionItem` specific
     /// capabilities.
-    completionItem: Undefinedable(struct {
+    completionItem: ?struct {
         /// Client supports commit characters on a completion item.
-        commitCharactersSupport: Undefinedable(bool),
+        commitCharactersSupport: ?bool = null,
 
         /// Client supports the deprecated property on a completion item.
-        deprecatedSupport: Undefinedable(bool),
+        deprecatedSupport: ?bool = null,
 
         /// Client supports the follow content formats for the documentation
         /// property. The order describes the preferred format of the client.
-        documentationFormat: Undefinedable([]MarkupKind),
+        documentationFormat: ?[]MarkupKind = null,
 
         /// Client support insert replace edit to control different behavior if a
         /// completion item is inserted in the text or should replace text.
-        insertReplaceSupport: Undefinedable(bool),
+        insertReplaceSupport: ?bool = null,
 
         /// The client supports the `insertTextMode` property on
         /// a completion item to override the whitespace handling mode
         /// as defined by the client (see `insertTextMode`).
-        insertTextModeSupport: Undefinedable(struct {
+        insertTextModeSupport: ?struct {
             valueSet: []InsertTextMode,
-        }),
+        } = null,
 
         /// Client supports the preselect property on a completion item.
-        preselectSupport: Undefinedable(bool),
+        preselectSupport: ?bool = null,
 
         /// Indicates which properties a client can resolve lazily on a completion
         /// item. Before version 3.16.0 only the predefined properties `documentation`
         /// and `details` could be resolved lazily.
-        resolveSupport: Undefinedable(struct {
+        resolveSupport: ?struct {
             /// The properties that a client can resolve lazily.
             properties: [][]const u8,
-        }),
+        } = null,
 
         /// Client supports snippets as insert text.
-        snippetSupport: Undefinedable(bool),
+        snippetSupport: ?bool = null,
 
         /// Client supports the tag property on a completion item. Clients supporting
         /// tags have to handle unknown tags gracefully. Clients especially need to
         /// preserve unknown tags when sending a completion item back to the server in
         /// a resolve call.
-        tagSupport: Undefinedable(struct {
+        tagSupport: ?struct {
             /// The tags supported by the client.
             valueSet: []1,
-        }),
-    }),
-    completionItemKind: Undefinedable(struct {
+        } = null,
+    } = null,
+    completionItemKind: ?struct {
         /// The completion item kind values the client supports. When this
         /// property exists the client also guarantees that it will
         /// handle values outside its set gracefully and falls back
         /// to a default value when unknown.
-        valueSet: Undefinedable([]CompletionItemKind),
-    }),
+        valueSet: ?[]CompletionItemKind = null,
+    } = null,
 
     /// Defines how the client handles whitespace and indentation
     /// when accepting a completion item that uses multi line
     /// text in either `insertText` or `textEdit`.
-    insertTextMode: Undefinedable(InsertTextMode),
+    insertTextMode: ?InsertTextMode = null,
 
     /// The client supports to send additional context information for a
     /// `textDocument/completion` request.
-    contextSupport: Undefinedable(bool),
+    contextSupport: ?bool = null,
 };
 
 /// How a completion was triggered
@@ -2395,14 +2415,14 @@ pub const CompletionContext = struct {
 
     /// The trigger character (a single character) that has trigger code complete.
     /// Is undefined if `triggerKind !== CompletionTriggerKind.TriggerCharacter`
-    triggerCharacter: Undefinedable([]const u8),
+    triggerCharacter: ?[]const u8 = null,
 };
 
 /// Completion parameters
 pub const CompletionParams = struct {
     /// The completion context. This is only available it the client specifies
     /// to send this using the client capability `textDocument.completion.contextSupport === true`
-    context: Undefinedable(CompletionContext),
+    context: ?CompletionContext = null,
 
     /// The text document.
     textDocument: TextDocumentIdentifier,
@@ -2411,11 +2431,11 @@ pub const CompletionParams = struct {
     position: Position,
 
     /// An optional token that a server can use to report work done progress.
-    workDoneToken: Undefinedable(ProgressToken),
+    workDoneToken: ?ProgressToken = null,
 
     /// An optional token that a server can use to report partial results (e.g. streaming) to
     /// the client.
-    partialResultToken: Undefinedable(ProgressToken),
+    partialResultToken: ?ProgressToken = null,
 };
 
 /// Completion options.
@@ -2425,17 +2445,17 @@ pub const CompletionOptions = struct {
     /// starts to type an identifier. For example if the user types `c` in a JavaScript file
     /// code complete will automatically pop up present `console` besides others as a
     /// completion item. Characters that make up identifiers don't need to be listed here.
-    triggerCharacters: Undefinedable([][]const u8),
+    triggerCharacters: ?[][]const u8 = null,
 
     /// The list of all possible characters that commit a completion. This field can be used
     /// if clients don't support individual commit characters per completion item. See
     /// `ClientCapabilities.textDocument.completion.completionItem.commitCharactersSupport`
-    allCommitCharacters: Undefinedable([][]const u8),
+    allCommitCharacters: ?[][]const u8 = null,
 
     /// The server provides support to resolve additional
     /// information for a completion item.
-    resolveProvider: Undefinedable(bool),
-    workDoneProgress: Undefinedable(bool),
+    resolveProvider: ?bool = null,
+    workDoneProgress: ?bool = null,
 };
 
 /// Registration options for a [CompletionRequest](#CompletionRequest).
@@ -2449,17 +2469,17 @@ pub const CompletionRegistrationOptions = struct {
     /// starts to type an identifier. For example if the user types `c` in a JavaScript file
     /// code complete will automatically pop up present `console` besides others as a
     /// completion item. Characters that make up identifiers don't need to be listed here.
-    triggerCharacters: Undefinedable([][]const u8),
+    triggerCharacters: ?[][]const u8 = null,
 
     /// The list of all possible characters that commit a completion. This field can be used
     /// if clients don't support individual commit characters per completion item. See
     /// `ClientCapabilities.textDocument.completion.completionItem.commitCharactersSupport`
-    allCommitCharacters: Undefinedable([][]const u8),
+    allCommitCharacters: ?[][]const u8 = null,
 
     /// The server provides support to resolve additional
     /// information for a completion item.
-    resolveProvider: Undefinedable(bool),
-    workDoneProgress: Undefinedable(bool),
+    resolveProvider: ?bool = null,
+    workDoneProgress: ?bool = null,
 };
 
 /// Request to request completion at a given text document position. The request's
@@ -2468,6 +2488,7 @@ pub const CompletionRegistrationOptions = struct {
 /// or a Thenable that resolves to such.
 pub const CompletionRequest = struct {
     comptime method: []const u8 = "textDocument/completion",
+    id: RequestId,
     params: CompletionParams,
 };
 
@@ -2476,20 +2497,21 @@ pub const CompletionRequest = struct {
 /// is of type [CompletionItem](#CompletionItem) or a Thenable that resolves to such.
 pub const CompletionResolveRequest = struct {
     comptime method: []const u8 = "completionItem/resolve",
+    id: RequestId,
     params: CompletionItem,
 };
 pub const HoverClientCapabilities = struct {
     /// Whether hover supports dynamic registration.
-    dynamicRegistration: Undefinedable(bool),
+    dynamicRegistration: ?bool = null,
 
     /// Client supports the follow content formats for the content
     /// property. The order describes the preferred format of the client.
-    contentFormat: Undefinedable([]MarkupKind),
+    contentFormat: ?[]MarkupKind = null,
 };
 
 /// Hover options.
 pub const HoverOptions = struct {
-    workDoneProgress: Undefinedable(bool),
+    workDoneProgress: ?bool = null,
 };
 
 /// Parameters for a [HoverRequest](#HoverRequest).
@@ -2501,7 +2523,7 @@ pub const HoverParams = struct {
     position: Position,
 
     /// An optional token that a server can use to report work done progress.
-    workDoneToken: Undefinedable(ProgressToken),
+    workDoneToken: ?ProgressToken = null,
 };
 
 /// Registration options for a [HoverRequest](#HoverRequest).
@@ -2509,7 +2531,7 @@ pub const HoverRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
-    workDoneProgress: Undefinedable(bool),
+    workDoneProgress: ?bool = null,
 };
 
 /// Request to request hover information at a given text document position. The request's
@@ -2517,48 +2539,49 @@ pub const HoverRegistrationOptions = struct {
 /// type [Hover](#Hover) or a Thenable that resolves to such.
 pub const HoverRequest = struct {
     comptime method: []const u8 = "textDocument/hover",
+    id: RequestId,
     params: HoverParams,
 };
 
 /// Client Capabilities for a [SignatureHelpRequest](#SignatureHelpRequest).
 pub const SignatureHelpClientCapabilities = struct {
     /// Whether signature help supports dynamic registration.
-    dynamicRegistration: Undefinedable(bool),
+    dynamicRegistration: ?bool = null,
 
     /// The client supports the following `SignatureInformation`
     /// specific properties.
-    signatureInformation: Undefinedable(struct {
+    signatureInformation: ?struct {
         /// The client support the `activeParameter` property on `SignatureInformation`
         /// literal.
-        activeParameterSupport: Undefinedable(bool),
+        activeParameterSupport: ?bool = null,
 
         /// Client supports the follow content formats for the documentation
         /// property. The order describes the preferred format of the client.
-        documentationFormat: Undefinedable([]MarkupKind),
+        documentationFormat: ?[]MarkupKind = null,
 
         /// Client capabilities specific to parameter information.
-        parameterInformation: Undefinedable(struct {
+        parameterInformation: ?struct {
             /// The client supports processing label offsets instead of a
             /// simple label string.
-            labelOffsetSupport: Undefinedable(bool),
-        }),
-    }),
+            labelOffsetSupport: ?bool = null,
+        } = null,
+    } = null,
 
     /// The client supports to send additional context information for a
     /// `textDocument/signatureHelp` request. A client that opts into
     /// contextSupport will also support the `retriggerCharacters` on
     /// `SignatureHelpOptions`.
-    contextSupport: Undefinedable(bool),
+    contextSupport: ?bool = null,
 };
 
 /// Server Capabilities for a [SignatureHelpRequest](#SignatureHelpRequest).
 pub const SignatureHelpOptions = struct {
     /// List of characters that trigger signature help.
-    triggerCharacters: Undefinedable([][]const u8),
+    triggerCharacters: ?[][]const u8 = null,
 
     /// List of characters that re-trigger signature help.
-    retriggerCharacters: Undefinedable([][]const u8),
-    workDoneProgress: Undefinedable(bool),
+    retriggerCharacters: ?[][]const u8 = null,
+    workDoneProgress: ?bool = null,
 };
 
 /// How a signature help was triggered.
@@ -2576,20 +2599,20 @@ pub const SignatureHelpContext = struct {
     triggerKind: SignatureHelpTriggerKind,
 
     /// Character that caused signature help to be triggered.
-    triggerCharacter: Undefinedable([]const u8),
+    triggerCharacter: ?[]const u8 = null,
 
     /// `true` if signature help was already showing when it was triggered.
     isRetrigger: bool,
 
     /// The currently active `SignatureHelp`.
-    activeSignatureHelp: Undefinedable(SignatureHelp),
+    activeSignatureHelp: ?SignatureHelp = null,
 };
 
 /// Parameters for a [SignatureHelpRequest](#SignatureHelpRequest).
 pub const SignatureHelpParams = struct {
     /// The signature help context. This is only available if the client specifies
     /// to send this using the client capability `textDocument.signatureHelp.contextSupport === true`
-    context: Undefinedable(SignatureHelpContext),
+    context: ?SignatureHelpContext = null,
 
     /// The text document.
     textDocument: TextDocumentIdentifier,
@@ -2598,7 +2621,7 @@ pub const SignatureHelpParams = struct {
     position: Position,
 
     /// An optional token that a server can use to report work done progress.
-    workDoneToken: Undefinedable(ProgressToken),
+    workDoneToken: ?ProgressToken = null,
 };
 
 /// Registration options for a [SignatureHelpRequest](#SignatureHelpRequest).
@@ -2608,29 +2631,30 @@ pub const SignatureHelpRegistrationOptions = struct {
     documentSelector: ?DocumentSelector,
 
     /// List of characters that trigger signature help.
-    triggerCharacters: Undefinedable([][]const u8),
+    triggerCharacters: ?[][]const u8 = null,
 
     /// List of characters that re-trigger signature help.
-    retriggerCharacters: Undefinedable([][]const u8),
-    workDoneProgress: Undefinedable(bool),
+    retriggerCharacters: ?[][]const u8 = null,
+    workDoneProgress: ?bool = null,
 };
 pub const SignatureHelpRequest = struct {
     comptime method: []const u8 = "textDocument/signatureHelp",
+    id: RequestId,
     params: SignatureHelpParams,
 };
 
 /// Client Capabilities for a [DefinitionRequest](#DefinitionRequest).
 pub const DefinitionClientCapabilities = struct {
     /// Whether definition supports dynamic registration.
-    dynamicRegistration: Undefinedable(bool),
+    dynamicRegistration: ?bool = null,
 
     /// The client supports additional metadata in the form of definition links.
-    linkSupport: Undefinedable(bool),
+    linkSupport: ?bool = null,
 };
 
 /// Server Capabilities for a [DefinitionRequest](#DefinitionRequest).
 pub const DefinitionOptions = struct {
-    workDoneProgress: Undefinedable(bool),
+    workDoneProgress: ?bool = null,
 };
 
 /// Parameters for a [DefinitionRequest](#DefinitionRequest).
@@ -2642,11 +2666,11 @@ pub const DefinitionParams = struct {
     position: Position,
 
     /// An optional token that a server can use to report work done progress.
-    workDoneToken: Undefinedable(ProgressToken),
+    workDoneToken: ?ProgressToken = null,
 
     /// An optional token that a server can use to report partial results (e.g. streaming) to
     /// the client.
-    partialResultToken: Undefinedable(ProgressToken),
+    partialResultToken: ?ProgressToken = null,
 };
 
 /// Registration options for a [DefinitionRequest](#DefinitionRequest).
@@ -2654,7 +2678,7 @@ pub const DefinitionRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
-    workDoneProgress: Undefinedable(bool),
+    workDoneProgress: ?bool = null,
 };
 
 /// A request to resolve the definition location of a symbol at a given text
@@ -2664,13 +2688,14 @@ pub const DefinitionRegistrationOptions = struct {
 /// to such.
 pub const DefinitionRequest = struct {
     comptime method: []const u8 = "textDocument/definition",
+    id: RequestId,
     params: DefinitionParams,
 };
 
 /// Client Capabilities for a [ReferencesRequest](#ReferencesRequest).
 pub const ReferenceClientCapabilities = struct {
     /// Whether references supports dynamic registration.
-    dynamicRegistration: Undefinedable(bool),
+    dynamicRegistration: ?bool = null,
 };
 
 /// Parameters for a [ReferencesRequest](#ReferencesRequest).
@@ -2684,16 +2709,16 @@ pub const ReferenceParams = struct {
     position: Position,
 
     /// An optional token that a server can use to report work done progress.
-    workDoneToken: Undefinedable(ProgressToken),
+    workDoneToken: ?ProgressToken = null,
 
     /// An optional token that a server can use to report partial results (e.g. streaming) to
     /// the client.
-    partialResultToken: Undefinedable(ProgressToken),
+    partialResultToken: ?ProgressToken = null,
 };
 
 /// Reference options.
 pub const ReferenceOptions = struct {
-    workDoneProgress: Undefinedable(bool),
+    workDoneProgress: ?bool = null,
 };
 
 /// Registration options for a [ReferencesRequest](#ReferencesRequest).
@@ -2701,7 +2726,7 @@ pub const ReferenceRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
-    workDoneProgress: Undefinedable(bool),
+    workDoneProgress: ?bool = null,
 };
 
 /// A request to resolve project-wide references for the symbol denoted
@@ -2710,13 +2735,14 @@ pub const ReferenceRegistrationOptions = struct {
 /// [Location[]](#Location) or a Thenable that resolves to such.
 pub const ReferencesRequest = struct {
     comptime method: []const u8 = "textDocument/references",
+    id: RequestId,
     params: ReferenceParams,
 };
 
 /// Client Capabilities for a [DocumentHighlightRequest](#DocumentHighlightRequest).
 pub const DocumentHighlightClientCapabilities = struct {
     /// Whether document highlight supports dynamic registration.
-    dynamicRegistration: Undefinedable(bool),
+    dynamicRegistration: ?bool = null,
 };
 
 /// Parameters for a [DocumentHighlightRequest](#DocumentHighlightRequest).
@@ -2728,16 +2754,16 @@ pub const DocumentHighlightParams = struct {
     position: Position,
 
     /// An optional token that a server can use to report work done progress.
-    workDoneToken: Undefinedable(ProgressToken),
+    workDoneToken: ?ProgressToken = null,
 
     /// An optional token that a server can use to report partial results (e.g. streaming) to
     /// the client.
-    partialResultToken: Undefinedable(ProgressToken),
+    partialResultToken: ?ProgressToken = null,
 };
 
 /// Provider options for a [DocumentHighlightRequest](#DocumentHighlightRequest).
 pub const DocumentHighlightOptions = struct {
-    workDoneProgress: Undefinedable(bool),
+    workDoneProgress: ?bool = null,
 };
 
 /// Registration options for a [DocumentHighlightRequest](#DocumentHighlightRequest).
@@ -2745,7 +2771,7 @@ pub const DocumentHighlightRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
-    workDoneProgress: Undefinedable(bool),
+    workDoneProgress: ?bool = null,
 };
 
 /// Request to resolve a [DocumentHighlight](#DocumentHighlight) for a given
@@ -2754,37 +2780,38 @@ pub const DocumentHighlightRegistrationOptions = struct {
 /// (#DocumentHighlight) or a Thenable that resolves to such.
 pub const DocumentHighlightRequest = struct {
     comptime method: []const u8 = "textDocument/documentHighlight",
+    id: RequestId,
     params: DocumentHighlightParams,
 };
 
 /// Client Capabilities for a [DocumentSymbolRequest](#DocumentSymbolRequest).
 pub const DocumentSymbolClientCapabilities = struct {
     /// Whether document symbol supports dynamic registration.
-    dynamicRegistration: Undefinedable(bool),
+    dynamicRegistration: ?bool = null,
 
     /// Specific capabilities for the `SymbolKind`.
-    symbolKind: Undefinedable(struct {
+    symbolKind: ?struct {
         /// The symbol kind values the client supports. When this
         /// property exists the client also guarantees that it will
         /// handle values outside its set gracefully and falls back
         /// to a default value when unknown.
-        valueSet: Undefinedable([]SymbolKind),
-    }),
+        valueSet: ?[]SymbolKind = null,
+    } = null,
 
     /// The client support hierarchical document symbols.
-    hierarchicalDocumentSymbolSupport: Undefinedable(bool),
+    hierarchicalDocumentSymbolSupport: ?bool = null,
 
     /// The client supports tags on `SymbolInformation`. Tags are supported on
     /// `DocumentSymbol` if `hierarchicalDocumentSymbolSupport` is set to true.
     /// Clients supporting tags have to handle unknown tags gracefully.
-    tagSupport: Undefinedable(struct {
+    tagSupport: ?struct {
         /// The tags supported by the client.
         valueSet: []1,
-    }),
+    } = null,
 
     /// The client supports an additional label presented in the UI when
     /// registering a document symbol provider.
-    labelSupport: Undefinedable(bool),
+    labelSupport: ?bool = null,
 };
 
 /// Parameters for a [DocumentSymbolRequest](#DocumentSymbolRequest).
@@ -2793,19 +2820,19 @@ pub const DocumentSymbolParams = struct {
     textDocument: TextDocumentIdentifier,
 
     /// An optional token that a server can use to report work done progress.
-    workDoneToken: Undefinedable(ProgressToken),
+    workDoneToken: ?ProgressToken = null,
 
     /// An optional token that a server can use to report partial results (e.g. streaming) to
     /// the client.
-    partialResultToken: Undefinedable(ProgressToken),
+    partialResultToken: ?ProgressToken = null,
 };
 
 /// Provider options for a [DocumentSymbolRequest](#DocumentSymbolRequest).
 pub const DocumentSymbolOptions = struct {
     /// A human-readable string that is shown when multiple outlines trees
     /// are shown for the same document.
-    label: Undefinedable([]const u8),
-    workDoneProgress: Undefinedable(bool),
+    label: ?[]const u8 = null,
+    workDoneProgress: ?bool = null,
 };
 
 /// Registration options for a [DocumentSymbolRequest](#DocumentSymbolRequest).
@@ -2816,8 +2843,8 @@ pub const DocumentSymbolRegistrationOptions = struct {
 
     /// A human-readable string that is shown when multiple outlines trees
     /// are shown for the same document.
-    label: Undefinedable([]const u8),
-    workDoneProgress: Undefinedable(bool),
+    label: ?[]const u8 = null,
+    workDoneProgress: ?bool = null,
 };
 
 /// A request to list all symbols found in a given text document. The request's
@@ -2826,18 +2853,19 @@ pub const DocumentSymbolRegistrationOptions = struct {
 /// that resolves to such.
 pub const DocumentSymbolRequest = struct {
     comptime method: []const u8 = "textDocument/documentSymbol",
+    id: RequestId,
     params: DocumentSymbolParams,
 };
 
 /// The Client Capabilities of a [CodeActionRequest](#CodeActionRequest).
 pub const CodeActionClientCapabilities = struct {
     /// Whether code action supports dynamic registration.
-    dynamicRegistration: Undefinedable(bool),
+    dynamicRegistration: ?bool = null,
 
     /// The client support code action literals of type `CodeAction` as a valid
     /// response of the `textDocument/codeAction` request. If the property is not
     /// set the request can only return `Command` literals.
-    codeActionLiteralSupport: Undefinedable(struct {
+    codeActionLiteralSupport: ?struct {
         /// The code action kind is support with the following value
         /// set.
         codeActionKind: struct {
@@ -2847,32 +2875,32 @@ pub const CodeActionClientCapabilities = struct {
             /// to a default value when unknown.
             valueSet: [][]const u8,
         },
-    }),
+    } = null,
 
     /// Whether code action supports the `isPreferred` property.
-    isPreferredSupport: Undefinedable(bool),
+    isPreferredSupport: ?bool = null,
 
     /// Whether code action supports the `disabled` property.
-    disabledSupport: Undefinedable(bool),
+    disabledSupport: ?bool = null,
 
     /// Whether code action supports the `data` property which is
     /// preserved between a `textDocument/codeAction` and a
     /// `codeAction/resolve` request.
-    dataSupport: Undefinedable(bool),
+    dataSupport: ?bool = null,
 
     /// Whether the client support resolving additional code action
     /// properties via a separate `codeAction/resolve` request.
-    resolveSupport: Undefinedable(struct {
+    resolveSupport: ?struct {
         /// The properties that a client can resolve lazily.
         properties: [][]const u8,
-    }),
+    } = null,
 
     /// Whether th client honors the change annotations in
     /// text edits and resource operations returned via the
     /// `CodeAction#edit` property by for example presenting
     /// the workspace edit in the user interface and asking
     /// for confirmation.
-    honorsChangeAnnotations: Undefinedable(bool),
+    honorsChangeAnnotations: ?bool = null,
 };
 
 /// The parameters of a [CodeActionRequest](#CodeActionRequest).
@@ -2887,22 +2915,22 @@ pub const CodeActionParams = struct {
     context: CodeActionContext,
 
     /// An optional token that a server can use to report work done progress.
-    workDoneToken: Undefinedable(ProgressToken),
+    workDoneToken: ?ProgressToken = null,
 
     /// An optional token that a server can use to report partial results (e.g. streaming) to
     /// the client.
-    partialResultToken: Undefinedable(ProgressToken),
+    partialResultToken: ?ProgressToken = null,
 };
 
 /// Provider options for a [CodeActionRequest](#CodeActionRequest).
 pub const CodeActionOptions = struct {
     /// CodeActionKinds that this server may return.
-    codeActionKinds: Undefinedable([][]const u8),
+    codeActionKinds: ?[][]const u8 = null,
 
     /// The server provides support to resolve additional
     /// information for a code action.
-    resolveProvider: Undefinedable(bool),
-    workDoneProgress: Undefinedable(bool),
+    resolveProvider: ?bool = null,
+    workDoneProgress: ?bool = null,
 };
 
 /// Registration options for a [CodeActionRequest](#CodeActionRequest).
@@ -2912,17 +2940,18 @@ pub const CodeActionRegistrationOptions = struct {
     documentSelector: ?DocumentSelector,
 
     /// CodeActionKinds that this server may return.
-    codeActionKinds: Undefinedable([][]const u8),
+    codeActionKinds: ?[][]const u8 = null,
 
     /// The server provides support to resolve additional
     /// information for a code action.
-    resolveProvider: Undefinedable(bool),
-    workDoneProgress: Undefinedable(bool),
+    resolveProvider: ?bool = null,
+    workDoneProgress: ?bool = null,
 };
 
 /// A request to provide commands for the given text document and range.
 pub const CodeActionRequest = struct {
     comptime method: []const u8 = "textDocument/codeAction",
+    id: RequestId,
     params: CodeActionParams,
 };
 
@@ -2931,29 +2960,30 @@ pub const CodeActionRequest = struct {
 /// is of type [CodeAction](#CodeAction) or a Thenable that resolves to such.
 pub const CodeActionResolveRequest = struct {
     comptime method: []const u8 = "codeAction/resolve",
+    id: RequestId,
     params: CodeAction,
 };
 
 /// Client capabilities for a [WorkspaceSymbolRequest](#WorkspaceSymbolRequest).
 pub const WorkspaceSymbolClientCapabilities = struct {
     /// Symbol request supports dynamic registration.
-    dynamicRegistration: Undefinedable(bool),
+    dynamicRegistration: ?bool = null,
 
     /// Specific capabilities for the `SymbolKind` in the `workspace/symbol` request.
-    symbolKind: Undefinedable(struct {
+    symbolKind: ?struct {
         /// The symbol kind values the client supports. When this
         /// property exists the client also guarantees that it will
         /// handle values outside its set gracefully and falls back
         /// to a default value when unknown.
-        valueSet: Undefinedable([]SymbolKind),
-    }),
+        valueSet: ?[]SymbolKind = null,
+    } = null,
 
     /// The client supports tags on `SymbolInformation`.
     /// Clients supporting tags have to handle unknown tags gracefully.
-    tagSupport: Undefinedable(struct {
+    tagSupport: ?struct {
         /// The tags supported by the client.
         valueSet: []1,
-    }),
+    } = null,
 };
 
 /// The parameters of a [WorkspaceSymbolRequest](#WorkspaceSymbolRequest).
@@ -2963,21 +2993,21 @@ pub const WorkspaceSymbolParams = struct {
     query: []const u8,
 
     /// An optional token that a server can use to report work done progress.
-    workDoneToken: Undefinedable(ProgressToken),
+    workDoneToken: ?ProgressToken = null,
 
     /// An optional token that a server can use to report partial results (e.g. streaming) to
     /// the client.
-    partialResultToken: Undefinedable(ProgressToken),
+    partialResultToken: ?ProgressToken = null,
 };
 
 /// Server capabilities for a [WorkspaceSymbolRequest](#WorkspaceSymbolRequest).
 pub const WorkspaceSymbolOptions = struct {
-    workDoneProgress: Undefinedable(bool),
+    workDoneProgress: ?bool = null,
 };
 
 /// Registration options for a [WorkspaceSymbolRequest](#WorkspaceSymbolRequest).
 pub const WorkspaceSymbolRegistrationOptions = struct {
-    workDoneProgress: Undefinedable(bool),
+    workDoneProgress: ?bool = null,
 };
 
 /// A request to list project-wide symbols matching the query string given
@@ -2986,18 +3016,19 @@ pub const WorkspaceSymbolRegistrationOptions = struct {
 /// resolves to such.
 pub const WorkspaceSymbolRequest = struct {
     comptime method: []const u8 = "workspace/symbol",
+    id: RequestId,
     params: WorkspaceSymbolParams,
 };
 
 /// The client capabilities  of a [CodeLensRequest](#CodeLensRequest).
 pub const CodeLensClientCapabilities = struct {
     /// Whether code lens supports dynamic registration.
-    dynamicRegistration: Undefinedable(bool),
+    dynamicRegistration: ?bool = null,
 };
 pub const CodeLensWorkspaceClientCapabilities = struct {
     /// Whether the client implementation supports a refresh request sent from the
     /// server to the client.
-    refreshSupport: Undefinedable(bool),
+    refreshSupport: ?bool = null,
 };
 
 /// The parameters of a [CodeLensRequest](#CodeLensRequest).
@@ -3006,18 +3037,18 @@ pub const CodeLensParams = struct {
     textDocument: TextDocumentIdentifier,
 
     /// An optional token that a server can use to report work done progress.
-    workDoneToken: Undefinedable(ProgressToken),
+    workDoneToken: ?ProgressToken = null,
 
     /// An optional token that a server can use to report partial results (e.g. streaming) to
     /// the client.
-    partialResultToken: Undefinedable(ProgressToken),
+    partialResultToken: ?ProgressToken = null,
 };
 
 /// Code Lens provider options of a [CodeLensRequest](#CodeLensRequest).
 pub const CodeLensOptions = struct {
     /// Code lens has a resolve provider as well.
-    resolveProvider: Undefinedable(bool),
-    workDoneProgress: Undefinedable(bool),
+    resolveProvider: ?bool = null,
+    workDoneProgress: ?bool = null,
 };
 
 /// Registration options for a [CodeLensRequest](#CodeLensRequest).
@@ -3027,34 +3058,37 @@ pub const CodeLensRegistrationOptions = struct {
     documentSelector: ?DocumentSelector,
 
     /// Code lens has a resolve provider as well.
-    resolveProvider: Undefinedable(bool),
-    workDoneProgress: Undefinedable(bool),
+    resolveProvider: ?bool = null,
+    workDoneProgress: ?bool = null,
 };
 
 /// A request to provide code lens for the given text document.
 pub const CodeLensRequest = struct {
     comptime method: []const u8 = "textDocument/codeLens",
+    id: RequestId,
     params: CodeLensParams,
 };
 
 /// A request to resolve a command for a given code lens.
 pub const CodeLensResolveRequest = struct {
     comptime method: []const u8 = "codeLens/resolve",
+    id: RequestId,
     params: CodeLens,
 };
 
 /// A request to refresh all code actions
 pub const CodeLensRefreshRequest = struct {
     comptime method: []const u8 = "workspace/codeLens/refresh",
+    id: RequestId,
 };
 
 /// The client capabilities of a [DocumentLinkRequest](#DocumentLinkRequest).
 pub const DocumentLinkClientCapabilities = struct {
     /// Whether document link supports dynamic registration.
-    dynamicRegistration: Undefinedable(bool),
+    dynamicRegistration: ?bool = null,
 
     /// Whether the client support the `tooltip` property on `DocumentLink`.
-    tooltipSupport: Undefinedable(bool),
+    tooltipSupport: ?bool = null,
 };
 
 /// The parameters of a [DocumentLinkRequest](#DocumentLinkRequest).
@@ -3063,18 +3097,18 @@ pub const DocumentLinkParams = struct {
     textDocument: TextDocumentIdentifier,
 
     /// An optional token that a server can use to report work done progress.
-    workDoneToken: Undefinedable(ProgressToken),
+    workDoneToken: ?ProgressToken = null,
 
     /// An optional token that a server can use to report partial results (e.g. streaming) to
     /// the client.
-    partialResultToken: Undefinedable(ProgressToken),
+    partialResultToken: ?ProgressToken = null,
 };
 
 /// Provider options for a [DocumentLinkRequest](#DocumentLinkRequest).
 pub const DocumentLinkOptions = struct {
     /// Document links have a resolve provider as well.
-    resolveProvider: Undefinedable(bool),
-    workDoneProgress: Undefinedable(bool),
+    resolveProvider: ?bool = null,
+    workDoneProgress: ?bool = null,
 };
 
 /// Registration options for a [DocumentLinkRequest](#DocumentLinkRequest).
@@ -3084,13 +3118,14 @@ pub const DocumentLinkRegistrationOptions = struct {
     documentSelector: ?DocumentSelector,
 
     /// Document links have a resolve provider as well.
-    resolveProvider: Undefinedable(bool),
-    workDoneProgress: Undefinedable(bool),
+    resolveProvider: ?bool = null,
+    workDoneProgress: ?bool = null,
 };
 
 /// A request to provide document links
 pub const DocumentLinkRequest = struct {
     comptime method: []const u8 = "textDocument/documentLink",
+    id: RequestId,
     params: DocumentLinkParams,
 };
 
@@ -3099,13 +3134,14 @@ pub const DocumentLinkRequest = struct {
 /// is of type [DocumentLink](#DocumentLink) or a Thenable that resolves to such.
 pub const DocumentLinkResolveRequest = struct {
     comptime method: []const u8 = "documentLink/resolve",
+    id: RequestId,
     params: DocumentLink,
 };
 
 /// Client capabilities of a [DocumentFormattingRequest](#DocumentFormattingRequest).
 pub const DocumentFormattingClientCapabilities = struct {
     /// Whether formatting supports dynamic registration.
-    dynamicRegistration: Undefinedable(bool),
+    dynamicRegistration: ?bool = null,
 };
 
 /// The parameters of a [DocumentFormattingRequest](#DocumentFormattingRequest).
@@ -3117,12 +3153,12 @@ pub const DocumentFormattingParams = struct {
     options: FormattingOptions,
 
     /// An optional token that a server can use to report work done progress.
-    workDoneToken: Undefinedable(ProgressToken),
+    workDoneToken: ?ProgressToken = null,
 };
 
 /// Provider options for a [DocumentFormattingRequest](#DocumentFormattingRequest).
 pub const DocumentFormattingOptions = struct {
-    workDoneProgress: Undefinedable(bool),
+    workDoneProgress: ?bool = null,
 };
 
 /// Registration options for a [DocumentFormattingRequest](#DocumentFormattingRequest).
@@ -3130,19 +3166,20 @@ pub const DocumentFormattingRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
-    workDoneProgress: Undefinedable(bool),
+    workDoneProgress: ?bool = null,
 };
 
 /// A request to to format a whole document.
 pub const DocumentFormattingRequest = struct {
     comptime method: []const u8 = "textDocument/formatting",
+    id: RequestId,
     params: DocumentFormattingParams,
 };
 
 /// Client capabilities of a [DocumentRangeFormattingRequest](#DocumentRangeFormattingRequest).
 pub const DocumentRangeFormattingClientCapabilities = struct {
     /// Whether range formatting supports dynamic registration.
-    dynamicRegistration: Undefinedable(bool),
+    dynamicRegistration: ?bool = null,
 };
 
 /// The parameters of a [DocumentRangeFormattingRequest](#DocumentRangeFormattingRequest).
@@ -3157,12 +3194,12 @@ pub const DocumentRangeFormattingParams = struct {
     options: FormattingOptions,
 
     /// An optional token that a server can use to report work done progress.
-    workDoneToken: Undefinedable(ProgressToken),
+    workDoneToken: ?ProgressToken = null,
 };
 
 /// Provider options for a [DocumentRangeFormattingRequest](#DocumentRangeFormattingRequest).
 pub const DocumentRangeFormattingOptions = struct {
-    workDoneProgress: Undefinedable(bool),
+    workDoneProgress: ?bool = null,
 };
 
 /// Registration options for a [DocumentRangeFormattingRequest](#DocumentRangeFormattingRequest).
@@ -3170,19 +3207,20 @@ pub const DocumentRangeFormattingRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
-    workDoneProgress: Undefinedable(bool),
+    workDoneProgress: ?bool = null,
 };
 
 /// A request to to format a range in a document.
 pub const DocumentRangeFormattingRequest = struct {
     comptime method: []const u8 = "textDocument/rangeFormatting",
+    id: RequestId,
     params: DocumentRangeFormattingParams,
 };
 
 /// Client capabilities of a [DocumentOnTypeFormattingRequest](#DocumentOnTypeFormattingRequest).
 pub const DocumentOnTypeFormattingClientCapabilities = struct {
     /// Whether on type formatting supports dynamic registration.
-    dynamicRegistration: Undefinedable(bool),
+    dynamicRegistration: ?bool = null,
 };
 
 /// The parameters of a [DocumentOnTypeFormattingRequest](#DocumentOnTypeFormattingRequest).
@@ -3206,7 +3244,7 @@ pub const DocumentOnTypeFormattingOptions = struct {
     firstTriggerCharacter: []const u8,
 
     /// More trigger characters.
-    moreTriggerCharacter: Undefinedable([][]const u8),
+    moreTriggerCharacter: ?[][]const u8 = null,
 };
 
 /// Registration options for a [DocumentOnTypeFormattingRequest](#DocumentOnTypeFormattingRequest).
@@ -3219,12 +3257,13 @@ pub const DocumentOnTypeFormattingRegistrationOptions = struct {
     firstTriggerCharacter: []const u8,
 
     /// More trigger characters.
-    moreTriggerCharacter: Undefinedable([][]const u8),
+    moreTriggerCharacter: ?[][]const u8 = null,
 };
 
 /// A request to format a document on type.
 pub const DocumentOnTypeFormattingRequest = struct {
     comptime method: []const u8 = "textDocument/onTypeFormatting",
+    id: RequestId,
     params: DocumentOnTypeFormattingParams,
 };
 pub const PrepareSupportDefaultBehavior = enum(i64) {
@@ -3234,11 +3273,11 @@ pub const PrepareSupportDefaultBehavior = enum(i64) {
 };
 pub const RenameClientCapabilities = struct {
     /// Whether rename supports dynamic registration.
-    dynamicRegistration: Undefinedable(bool),
+    dynamicRegistration: ?bool = null,
 
     /// Client supports testing for validity of rename operations
     /// before execution.
-    prepareSupport: Undefinedable(bool),
+    prepareSupport: ?bool = null,
 
     /// Client supports the default behavior result.
     comptime prepareSupportDefaultBehavior: i64 = 1,
@@ -3248,7 +3287,7 @@ pub const RenameClientCapabilities = struct {
     /// rename request's workspace edit by for example presenting
     /// the workspace edit in the user interface and asking
     /// for confirmation.
-    honorsChangeAnnotations: Undefinedable(bool),
+    honorsChangeAnnotations: ?bool = null,
 };
 
 /// The parameters of a [RenameRequest](#RenameRequest).
@@ -3265,14 +3304,14 @@ pub const RenameParams = struct {
     newName: []const u8,
 
     /// An optional token that a server can use to report work done progress.
-    workDoneToken: Undefinedable(ProgressToken),
+    workDoneToken: ?ProgressToken = null,
 };
 
 /// Provider options for a [RenameRequest](#RenameRequest).
 pub const RenameOptions = struct {
     /// Renames should be checked and tested before being executed.
-    prepareProvider: Undefinedable(bool),
-    workDoneProgress: Undefinedable(bool),
+    prepareProvider: ?bool = null,
+    workDoneProgress: ?bool = null,
 };
 
 /// Registration options for a [RenameRequest](#RenameRequest).
@@ -3282,13 +3321,14 @@ pub const RenameRegistrationOptions = struct {
     documentSelector: ?DocumentSelector,
 
     /// Renames should be checked and tested before being executed.
-    prepareProvider: Undefinedable(bool),
-    workDoneProgress: Undefinedable(bool),
+    prepareProvider: ?bool = null,
+    workDoneProgress: ?bool = null,
 };
 
 /// A request to rename a symbol.
 pub const RenameRequest = struct {
     comptime method: []const u8 = "textDocument/rename",
+    id: RequestId,
     params: RenameParams,
 };
 pub const PrepareRenameParams = struct {
@@ -3299,19 +3339,20 @@ pub const PrepareRenameParams = struct {
     position: Position,
 
     /// An optional token that a server can use to report work done progress.
-    workDoneToken: Undefinedable(ProgressToken),
+    workDoneToken: ?ProgressToken = null,
 };
 
 /// A request to test and perform the setup necessary for a rename.
 pub const PrepareRenameRequest = struct {
     comptime method: []const u8 = "textDocument/prepareRename",
+    id: RequestId,
     params: PrepareRenameParams,
 };
 
 /// The client capabilities of a [ExecuteCommandRequest](#ExecuteCommandRequest).
 pub const ExecuteCommandClientCapabilities = struct {
     /// Execute command supports dynamic registration.
-    dynamicRegistration: Undefinedable(bool),
+    dynamicRegistration: ?bool = null,
 };
 
 /// The parameters of a [ExecuteCommandRequest](#ExecuteCommandRequest).
@@ -3320,59 +3361,60 @@ pub const ExecuteCommandParams = struct {
     command: []const u8,
 
     /// Arguments that the command should be invoked with.
-    arguments: Undefinedable([]std.json.Value),
+    arguments: ?[]std.json.Value = null,
 
     /// An optional token that a server can use to report work done progress.
-    workDoneToken: Undefinedable(ProgressToken),
+    workDoneToken: ?ProgressToken = null,
 };
 
 /// The server capabilities of a [ExecuteCommandRequest](#ExecuteCommandRequest).
 pub const ExecuteCommandOptions = struct {
     /// The commands to be executed on the server
     commands: [][]const u8,
-    workDoneProgress: Undefinedable(bool),
+    workDoneProgress: ?bool = null,
 };
 
 /// Registration options for a [ExecuteCommandRequest](#ExecuteCommandRequest).
 pub const ExecuteCommandRegistrationOptions = struct {
     /// The commands to be executed on the server
     commands: [][]const u8,
-    workDoneProgress: Undefinedable(bool),
+    workDoneProgress: ?bool = null,
 };
 
 /// A request send from the client to the server to execute a command. The request might return
 /// a workspace edit which the client will apply to the workspace.
 pub const ExecuteCommandRequest = struct {
     comptime method: []const u8 = "workspace/executeCommand",
+    id: RequestId,
     params: ExecuteCommandParams,
 };
 pub const WorkspaceEditClientCapabilities = struct {
     /// The client supports versioned document changes in `WorkspaceEdit`s
-    documentChanges: Undefinedable(bool),
+    documentChanges: ?bool = null,
 
     /// The resource operations the client supports. Clients should at least
     /// support 'create', 'rename' and 'delete' files and folders.
-    resourceOperations: Undefinedable([]ResourceOperationKind),
+    resourceOperations: ?[]ResourceOperationKind = null,
 
     /// The failure handling strategy of a client if applying the workspace edit
     /// fails.
-    failureHandling: Undefinedable(FailureHandlingKind),
+    failureHandling: ?FailureHandlingKind = null,
 
     /// Whether the client normalizes line endings to the client specific
     /// setting.
     /// If set to `true` the client will normalize line ending characters
     /// in a workspace edit containing to the client specific new line
     /// character.
-    normalizesLineEndings: Undefinedable(bool),
+    normalizesLineEndings: ?bool = null,
 
     /// Whether the client in general supports change annotations on text edits,
     /// create file, rename file and delete file changes.
-    changeAnnotationSupport: Undefinedable(struct {
+    changeAnnotationSupport: ?struct {
         /// Whether the client groups edits with equal labels into tree nodes,
         /// for instance all edits labelled with "Changes in Strings" would
         /// be a tree node.
-        groupsOnLabel: Undefinedable(bool),
-    }),
+        groupsOnLabel: ?bool = null,
+    } = null,
 };
 
 /// The parameters passed via a apply workspace edit request.
@@ -3380,7 +3422,7 @@ pub const ApplyWorkspaceEditParams = struct {
     /// An optional label of the workspace edit. This label is
     /// presented in the user interface for example on an undo
     /// stack to undo the workspace edit.
-    label: Undefinedable([]const u8),
+    label: ?[]const u8 = null,
 
     /// The edits to apply.
     edit: WorkspaceEdit,
@@ -3394,17 +3436,18 @@ pub const ApplyWorkspaceEditResponse = struct {
     /// An optional textual description for why the edit was not applied.
     /// This may be used by the server for diagnostic logging or to provide
     /// a suitable error for a request that triggered the edit.
-    failureReason: Undefinedable([]const u8),
+    failureReason: ?[]const u8 = null,
 
     /// Depending on the client's failure handling strategy `failedChange` might
     /// contain the index of the change that failed. This property is only available
     /// if the client signals a `failureHandlingStrategy` in its client capabilities.
-    failedChange: Undefinedable(i64),
+    failedChange: ?i64 = null,
 };
 
 /// A request sent from the server to the client to modified certain resources.
 pub const ApplyWorkspaceEditRequest = struct {
     comptime method: []const u8 = "workspace/applyEdit",
+    id: RequestId,
     params: ApplyWorkspaceEditParams,
 };
 
@@ -3414,6 +3457,7 @@ pub const ApplyWorkspaceEditRequest = struct {
 /// Thenable that resolves to such.
 pub const ImplementationRequest = struct {
     comptime method: []const u8 = "textDocument/implementation",
+    id: RequestId,
     params: ImplementationParams,
 };
 pub const ImplementationParams = struct {
@@ -3424,24 +3468,24 @@ pub const ImplementationParams = struct {
     position: Position,
 
     /// An optional token that a server can use to report work done progress.
-    workDoneToken: Undefinedable(ProgressToken),
+    workDoneToken: ?ProgressToken = null,
 
     /// An optional token that a server can use to report partial results (e.g. streaming) to
     /// the client.
-    partialResultToken: Undefinedable(ProgressToken),
+    partialResultToken: ?ProgressToken = null,
 };
 pub const ImplementationRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
-    workDoneProgress: Undefinedable(bool),
+    workDoneProgress: ?bool = null,
 
     /// The id used to register the request. The id can be used to deregister
     /// the request again. See also Registration#id.
-    id: Undefinedable([]const u8),
+    id: ?[]const u8 = null,
 };
 pub const ImplementationOptions = struct {
-    workDoneProgress: Undefinedable(bool),
+    workDoneProgress: ?bool = null,
 };
 
 /// A request to resolve the type definition locations of a symbol at a given text
@@ -3450,6 +3494,7 @@ pub const ImplementationOptions = struct {
 /// Thenable that resolves to such.
 pub const TypeDefinitionRequest = struct {
     comptime method: []const u8 = "textDocument/typeDefinition",
+    id: RequestId,
     params: TypeDefinitionParams,
 };
 pub const TypeDefinitionParams = struct {
@@ -3460,35 +3505,37 @@ pub const TypeDefinitionParams = struct {
     position: Position,
 
     /// An optional token that a server can use to report work done progress.
-    workDoneToken: Undefinedable(ProgressToken),
+    workDoneToken: ?ProgressToken = null,
 
     /// An optional token that a server can use to report partial results (e.g. streaming) to
     /// the client.
-    partialResultToken: Undefinedable(ProgressToken),
+    partialResultToken: ?ProgressToken = null,
 };
 pub const TypeDefinitionRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
-    workDoneProgress: Undefinedable(bool),
+    workDoneProgress: ?bool = null,
 
     /// The id used to register the request. The id can be used to deregister
     /// the request again. See also Registration#id.
-    id: Undefinedable([]const u8),
+    id: ?[]const u8 = null,
 };
 pub const TypeDefinitionOptions = struct {
-    workDoneProgress: Undefinedable(bool),
+    workDoneProgress: ?bool = null,
 };
 
 /// The `workspace/workspaceFolders` is sent from the server to the client to fetch the open workspace folders.
 pub const WorkspaceFoldersRequest = struct {
     comptime method: []const u8 = "workspace/workspaceFolders",
+    id: RequestId,
 };
 
 /// The `workspace/didChangeWorkspaceFolders` notification is sent from the client to the server when the workspace
 /// folder configuration changes.
 pub const DidChangeWorkspaceFoldersNotification = struct {
     comptime method: []const u8 = "workspace/didChangeWorkspaceFolders",
+    id: RequestId,
     params: DidChangeWorkspaceFoldersParams,
 };
 
@@ -3519,6 +3566,7 @@ pub const WorkspaceFoldersChangeEvent = struct {
 /// configuration setting.
 pub const ConfigurationRequest = struct {
     comptime method: []const u8 = "workspace/configuration",
+    id: RequestId,
     params: ConfigurationParams,
 };
 
@@ -3528,10 +3576,10 @@ pub const ConfigurationParams = struct {
 };
 pub const ConfigurationItem = struct {
     /// The scope to get the configuration section for.
-    scopeUri: Undefinedable([]const u8),
+    scopeUri: ?[]const u8 = null,
 
     /// The configuration section asked for.
-    section: Undefinedable([]const u8),
+    section: ?[]const u8 = null,
 };
 
 /// A request to list all color symbols found in a given text document. The request's
@@ -3540,6 +3588,7 @@ pub const ConfigurationItem = struct {
 /// that resolves to such.
 pub const DocumentColorRequest = struct {
     comptime method: []const u8 = "textDocument/documentColor",
+    id: RequestId,
     params: DocumentColorParams,
 };
 
@@ -3549,10 +3598,11 @@ pub const DocumentColorRequest = struct {
 /// that resolves to such.
 pub const ColorPresentationRequest = struct {
     comptime method: []const u8 = "textDocument/colorPresentation",
+    id: RequestId,
     params: ColorPresentationParams,
 };
 pub const DocumentColorOptions = struct {
-    workDoneProgress: Undefinedable(bool),
+    workDoneProgress: ?bool = null,
 };
 
 /// Parameters for a [DocumentColorRequest](#DocumentColorRequest).
@@ -3561,11 +3611,11 @@ pub const DocumentColorParams = struct {
     textDocument: TextDocumentIdentifier,
 
     /// An optional token that a server can use to report work done progress.
-    workDoneToken: Undefinedable(ProgressToken),
+    workDoneToken: ?ProgressToken = null,
 
     /// An optional token that a server can use to report partial results (e.g. streaming) to
     /// the client.
-    partialResultToken: Undefinedable(ProgressToken),
+    partialResultToken: ?ProgressToken = null,
 };
 
 /// Parameters for a [ColorPresentationRequest](#ColorPresentationRequest).
@@ -3580,11 +3630,11 @@ pub const ColorPresentationParams = struct {
     range: Range,
 
     /// An optional token that a server can use to report work done progress.
-    workDoneToken: Undefinedable(ProgressToken),
+    workDoneToken: ?ProgressToken = null,
 
     /// An optional token that a server can use to report partial results (e.g. streaming) to
     /// the client.
-    partialResultToken: Undefinedable(ProgressToken),
+    partialResultToken: ?ProgressToken = null,
 };
 pub const DocumentColorRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
@@ -3593,25 +3643,25 @@ pub const DocumentColorRegistrationOptions = struct {
 
     /// The id used to register the request. The id can be used to deregister
     /// the request again. See also Registration#id.
-    id: Undefinedable([]const u8),
-    workDoneProgress: Undefinedable(bool),
+    id: ?[]const u8 = null,
+    workDoneProgress: ?bool = null,
 };
 pub const FoldingRangeClientCapabilities = struct {
     /// Whether implementation supports dynamic registration for folding range providers. If this is set to `true`
     /// the client supports the new `FoldingRangeRegistrationOptions` return value for the corresponding server
     /// capability as well.
-    dynamicRegistration: Undefinedable(bool),
+    dynamicRegistration: ?bool = null,
 
     /// The maximum number of folding ranges that the client prefers to receive per document. The value serves as a
     /// hint, servers are free to follow the limit.
-    rangeLimit: Undefinedable(i64),
+    rangeLimit: ?i64 = null,
 
     /// If set, the client signals that it only supports folding complete lines. If set, client will
     /// ignore specified `startCharacter` and `endCharacter` properties in a FoldingRange.
-    lineFoldingOnly: Undefinedable(bool),
+    lineFoldingOnly: ?bool = null,
 };
 pub const FoldingRangeOptions = struct {
-    workDoneProgress: Undefinedable(bool),
+    workDoneProgress: ?bool = null,
 };
 
 /// A request to provide folding ranges in a document. The request's
@@ -3620,6 +3670,7 @@ pub const FoldingRangeOptions = struct {
 /// that resolves to such.
 pub const FoldingRangeRequest = struct {
     comptime method: []const u8 = "textDocument/foldingRange",
+    id: RequestId,
     params: FoldingRangeParams,
 };
 
@@ -3629,30 +3680,30 @@ pub const FoldingRangeParams = struct {
     textDocument: TextDocumentIdentifier,
 
     /// An optional token that a server can use to report work done progress.
-    workDoneToken: Undefinedable(ProgressToken),
+    workDoneToken: ?ProgressToken = null,
 
     /// An optional token that a server can use to report partial results (e.g. streaming) to
     /// the client.
-    partialResultToken: Undefinedable(ProgressToken),
+    partialResultToken: ?ProgressToken = null,
 };
 pub const FoldingRangeRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
-    workDoneProgress: Undefinedable(bool),
+    workDoneProgress: ?bool = null,
 
     /// The id used to register the request. The id can be used to deregister
     /// the request again. See also Registration#id.
-    id: Undefinedable([]const u8),
+    id: ?[]const u8 = null,
 };
 pub const DeclarationClientCapabilities = struct {
     /// Whether declaration supports dynamic registration. If this is set to `true`
     /// the client supports the new `DeclarationRegistrationOptions` return value
     /// for the corresponding server capability as well.
-    dynamicRegistration: Undefinedable(bool),
+    dynamicRegistration: ?bool = null,
 
     /// The client supports additional metadata in the form of declaration links.
-    linkSupport: Undefinedable(bool),
+    linkSupport: ?bool = null,
 };
 
 /// A request to resolve the type definition locations of a symbol at a given text
@@ -3662,6 +3713,7 @@ pub const DeclarationClientCapabilities = struct {
 /// to such.
 pub const DeclarationRequest = struct {
     comptime method: []const u8 = "textDocument/declaration",
+    id: RequestId,
     params: DeclarationParams,
 };
 pub const DeclarationParams = struct {
@@ -3672,14 +3724,14 @@ pub const DeclarationParams = struct {
     position: Position,
 
     /// An optional token that a server can use to report work done progress.
-    workDoneToken: Undefinedable(ProgressToken),
+    workDoneToken: ?ProgressToken = null,
 
     /// An optional token that a server can use to report partial results (e.g. streaming) to
     /// the client.
-    partialResultToken: Undefinedable(ProgressToken),
+    partialResultToken: ?ProgressToken = null,
 };
 pub const DeclarationRegistrationOptions = struct {
-    workDoneProgress: Undefinedable(bool),
+    workDoneProgress: ?bool = null,
 
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
@@ -3687,19 +3739,19 @@ pub const DeclarationRegistrationOptions = struct {
 
     /// The id used to register the request. The id can be used to deregister
     /// the request again. See also Registration#id.
-    id: Undefinedable([]const u8),
+    id: ?[]const u8 = null,
 };
 pub const DeclarationOptions = struct {
-    workDoneProgress: Undefinedable(bool),
+    workDoneProgress: ?bool = null,
 };
 pub const SelectionRangeClientCapabilities = struct {
     /// Whether implementation supports dynamic registration for selection range providers. If this is set to `true`
     /// the client supports the new `SelectionRangeRegistrationOptions` return value for the corresponding server
     /// capability as well.
-    dynamicRegistration: Undefinedable(bool),
+    dynamicRegistration: ?bool = null,
 };
 pub const SelectionRangeOptions = struct {
-    workDoneProgress: Undefinedable(bool),
+    workDoneProgress: ?bool = null,
 };
 
 /// A parameter literal used in selection range requests.
@@ -3711,11 +3763,11 @@ pub const SelectionRangeParams = struct {
     positions: []Position,
 
     /// An optional token that a server can use to report work done progress.
-    workDoneToken: Undefinedable(ProgressToken),
+    workDoneToken: ?ProgressToken = null,
 
     /// An optional token that a server can use to report partial results (e.g. streaming) to
     /// the client.
-    partialResultToken: Undefinedable(ProgressToken),
+    partialResultToken: ?ProgressToken = null,
 };
 
 /// A request to provide selection ranges in a document. The request's
@@ -3724,10 +3776,11 @@ pub const SelectionRangeParams = struct {
 /// that resolves to such.
 pub const SelectionRangeRequest = struct {
     comptime method: []const u8 = "textDocument/selectionRange",
+    id: RequestId,
     params: SelectionRangeParams,
 };
 pub const SelectionRangeRegistrationOptions = struct {
-    workDoneProgress: Undefinedable(bool),
+    workDoneProgress: ?bool = null,
 
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
@@ -3735,7 +3788,7 @@ pub const SelectionRangeRegistrationOptions = struct {
 
     /// The id used to register the request. The id can be used to deregister
     /// the request again. See also Registration#id.
-    id: Undefinedable([]const u8),
+    id: ?[]const u8 = null,
 };
 pub const WorkDoneProgressBegin = struct {
     comptime kind: []const u8 = "begin",
@@ -3747,38 +3800,38 @@ pub const WorkDoneProgressBegin = struct {
     /// Controls if a cancel button should show to allow the user to cancel the
     /// long running operation. Clients that don't support cancellation are allowed
     /// to ignore the setting.
-    cancellable: Undefinedable(bool),
+    cancellable: ?bool = null,
 
     /// Optional, more detailed associated progress message. Contains
     /// complementary information to the `title`.
-    message: Undefinedable([]const u8),
+    message: ?[]const u8 = null,
 
     /// Optional progress percentage to display (value 100 is considered 100%).
     /// If not provided infinite progress is assumed and clients are allowed
     /// to ignore the `percentage` value in subsequent in report notifications.
-    percentage: Undefinedable(i64),
+    percentage: ?i64 = null,
 };
 pub const WorkDoneProgressReport = struct {
     comptime kind: []const u8 = "report",
 
     /// Controls enablement state of a cancel button.
-    cancellable: Undefinedable(bool),
+    cancellable: ?bool = null,
 
     /// Optional, more detailed associated progress message. Contains
     /// complementary information to the `title`.
-    message: Undefinedable([]const u8),
+    message: ?[]const u8 = null,
 
     /// Optional progress percentage to display (value 100 is considered 100%).
     /// If not provided infinite progress is assumed and clients are allowed
     /// to ignore the `percentage` value in subsequent in report notifications.
-    percentage: Undefinedable(i64),
+    percentage: ?i64 = null,
 };
 pub const WorkDoneProgressEnd = struct {
     comptime kind: []const u8 = "end",
 
     /// Optional, a final message indicating to for example indicate the outcome
     /// of the operation.
-    message: Undefinedable([]const u8),
+    message: ?[]const u8 = null,
 };
 pub const WorkDoneProgressCreateParams = struct {
     /// The token to be used to report progress.
@@ -3789,6 +3842,7 @@ pub const WorkDoneProgressCreateParams = struct {
 /// reporting from the server.
 pub const WorkDoneProgressCreateRequest = struct {
     comptime method: []const u8 = "window/workDoneProgress/create",
+    id: RequestId,
     params: WorkDoneProgressCreateParams,
 };
 pub const WorkDoneProgressCancelParams = struct {
@@ -3800,18 +3854,19 @@ pub const WorkDoneProgressCancelParams = struct {
 /// initiated on the server side.
 pub const WorkDoneProgressCancelNotification = struct {
     comptime method: []const u8 = "window/workDoneProgress/cancel",
+    id: RequestId,
     params: WorkDoneProgressCancelParams,
 };
 pub const CallHierarchyClientCapabilities = struct {
     /// Whether implementation supports dynamic registration. If this is set to `true`
     /// the client supports the new `(TextDocumentRegistrationOptions & StaticRegistrationOptions)`
     /// return value for the corresponding server capability as well.
-    dynamicRegistration: Undefinedable(bool),
+    dynamicRegistration: ?bool = null,
 };
 
 /// Call hierarchy options used during static registration.
 pub const CallHierarchyOptions = struct {
-    workDoneProgress: Undefinedable(bool),
+    workDoneProgress: ?bool = null,
 };
 
 /// Call hierarchy options used during static or dynamic registration.
@@ -3819,11 +3874,11 @@ pub const CallHierarchyRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
-    workDoneProgress: Undefinedable(bool),
+    workDoneProgress: ?bool = null,
 
     /// The id used to register the request. The id can be used to deregister
     /// the request again. See also Registration#id.
-    id: Undefinedable([]const u8),
+    id: ?[]const u8 = null,
 };
 
 /// The parameter of a `callHierarchy/incomingCalls` request.
@@ -3831,16 +3886,17 @@ pub const CallHierarchyIncomingCallsParams = struct {
     item: CallHierarchyItem,
 
     /// An optional token that a server can use to report work done progress.
-    workDoneToken: Undefinedable(ProgressToken),
+    workDoneToken: ?ProgressToken = null,
 
     /// An optional token that a server can use to report partial results (e.g. streaming) to
     /// the client.
-    partialResultToken: Undefinedable(ProgressToken),
+    partialResultToken: ?ProgressToken = null,
 };
 
 /// A request to resolve the incoming calls for a given `CallHierarchyItem`.
 pub const CallHierarchyIncomingCallsRequest = struct {
     comptime method: []const u8 = "callHierarchy/incomingCalls",
+    id: RequestId,
     params: CallHierarchyIncomingCallsParams,
 };
 
@@ -3849,16 +3905,17 @@ pub const CallHierarchyOutgoingCallsParams = struct {
     item: CallHierarchyItem,
 
     /// An optional token that a server can use to report work done progress.
-    workDoneToken: Undefinedable(ProgressToken),
+    workDoneToken: ?ProgressToken = null,
 
     /// An optional token that a server can use to report partial results (e.g. streaming) to
     /// the client.
-    partialResultToken: Undefinedable(ProgressToken),
+    partialResultToken: ?ProgressToken = null,
 };
 
 /// A request to resolve the outgoing calls for a given `CallHierarchyItem`.
 pub const CallHierarchyOutgoingCallsRequest = struct {
     comptime method: []const u8 = "callHierarchy/outgoingCalls",
+    id: RequestId,
     params: CallHierarchyOutgoingCallsParams,
 };
 
@@ -3871,13 +3928,14 @@ pub const CallHierarchyPrepareParams = struct {
     position: Position,
 
     /// An optional token that a server can use to report work done progress.
-    workDoneToken: Undefinedable(ProgressToken),
+    workDoneToken: ?ProgressToken = null,
 };
 
 /// A request to result a `CallHierarchyItem` in a document at a given position.
 /// Can be used as an input to a incoming or outgoing call hierarchy.
 pub const CallHierarchyPrepareRequest = struct {
     comptime method: []const u8 = "textDocument/prepareCallHierarchy",
+    id: RequestId,
     params: CallHierarchyPrepareParams,
 };
 
@@ -3935,7 +3993,7 @@ pub const SemanticTokens = struct {
     /// the client will include the result id in the next semantic token request.
     /// A server can then instead of computing all semantic tokens again simply
     /// send a delta.
-    resultId: Undefinedable([]const u8),
+    resultId: ?[]const u8 = null,
 
     /// The actual tokens.
     data: []i64,
@@ -3951,10 +4009,10 @@ pub const SemanticTokensEdit = struct {
     deleteCount: i64,
 
     /// The elements to insert.
-    data: Undefinedable([]i64),
+    data: ?[]i64 = null,
 };
 pub const SemanticTokensDelta = struct {
-    resultId: Undefinedable([]const u8),
+    resultId: ?[]const u8 = null,
 
     /// The semantic token edits to transform a previous result into a new result.
     edits: []SemanticTokensEdit,
@@ -3969,7 +4027,7 @@ pub const SemanticTokensClientCapabilities = struct {
     /// Whether implementation supports dynamic registration. If this is set to `true`
     /// the client supports the new `(TextDocumentRegistrationOptions & StaticRegistrationOptions)`
     /// return value for the corresponding server capability as well.
-    dynamicRegistration: Undefinedable(bool),
+    dynamicRegistration: ?bool = null,
 
     /// Which requests the client supports and might send to the server
     /// depending on the server's capability. Please note that clients might not
@@ -3982,21 +4040,21 @@ pub const SemanticTokensClientCapabilities = struct {
     requests: struct {
         /// The client will send the `textDocument/semanticTokens/full` request if
         /// the server provides a corresponding handler.
-        full: Undefinedable(union(enum) {
+        full: ?union(enum) {
             boolean: bool,
             reflection: struct {
                 /// The client will send the `textDocument/semanticTokens/full/delta` request if
                 /// the server provides a corresponding handler.
-                delta: Undefinedable(bool),
+                delta: ?bool = null,
             },
-        }),
+        } = null,
 
         /// The client will send the `textDocument/semanticTokens/range` request if
         /// the server provides a corresponding handler.
-        range: Undefinedable(union(enum) {
+        range: ?union(enum) {
             boolean: bool,
             reflection: ManuallyTranslateValue,
-        }),
+        } = null,
     },
 
     /// The token types that the client supports.
@@ -4009,10 +4067,10 @@ pub const SemanticTokensClientCapabilities = struct {
     formats: []relative,
 
     /// Whether the client supports tokens that can overlap each other.
-    overlappingTokenSupport: Undefinedable(bool),
+    overlappingTokenSupport: ?bool = null,
 
     /// Whether the client supports tokens that can span multiple lines.
-    multilineTokenSupport: Undefinedable(bool),
+    multilineTokenSupport: ?bool = null,
 };
 pub const SemanticTokensOptions = struct {
     /// The legend used by the server
@@ -4020,20 +4078,20 @@ pub const SemanticTokensOptions = struct {
 
     /// Server supports providing semantic tokens for a specific range
     /// of a document.
-    range: Undefinedable(union(enum) {
+    range: ?union(enum) {
         boolean: bool,
         reflection: ManuallyTranslateValue,
-    }),
+    } = null,
 
     /// Server supports providing semantic tokens for a full document.
-    full: Undefinedable(union(enum) {
+    full: ?union(enum) {
         boolean: bool,
         reflection: struct {
             /// The server supports deltas for full documents.
-            delta: Undefinedable(bool),
+            delta: ?bool = null,
         },
-    }),
-    workDoneProgress: Undefinedable(bool),
+    } = null,
+    workDoneProgress: ?bool = null,
 };
 pub const SemanticTokensRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
@@ -4045,38 +4103,39 @@ pub const SemanticTokensRegistrationOptions = struct {
 
     /// Server supports providing semantic tokens for a specific range
     /// of a document.
-    range: Undefinedable(union(enum) {
+    range: ?union(enum) {
         boolean: bool,
         reflection: ManuallyTranslateValue,
-    }),
+    } = null,
 
     /// Server supports providing semantic tokens for a full document.
-    full: Undefinedable(union(enum) {
+    full: ?union(enum) {
         boolean: bool,
         reflection: struct {
             /// The server supports deltas for full documents.
-            delta: Undefinedable(bool),
+            delta: ?bool = null,
         },
-    }),
-    workDoneProgress: Undefinedable(bool),
+    } = null,
+    workDoneProgress: ?bool = null,
 
     /// The id used to register the request. The id can be used to deregister
     /// the request again. See also Registration#id.
-    id: Undefinedable([]const u8),
+    id: ?[]const u8 = null,
 };
 pub const SemanticTokensParams = struct {
     /// The text document.
     textDocument: TextDocumentIdentifier,
 
     /// An optional token that a server can use to report work done progress.
-    workDoneToken: Undefinedable(ProgressToken),
+    workDoneToken: ?ProgressToken = null,
 
     /// An optional token that a server can use to report partial results (e.g. streaming) to
     /// the client.
-    partialResultToken: Undefinedable(ProgressToken),
+    partialResultToken: ?ProgressToken = null,
 };
 pub const SemanticTokensRequest = struct {
     comptime method: []const u8 = "textDocument/semanticTokens/full",
+    id: RequestId,
     params: SemanticTokensParams,
 };
 pub const SemanticTokensDeltaParams = struct {
@@ -4088,14 +4147,15 @@ pub const SemanticTokensDeltaParams = struct {
     previousResultId: []const u8,
 
     /// An optional token that a server can use to report work done progress.
-    workDoneToken: Undefinedable(ProgressToken),
+    workDoneToken: ?ProgressToken = null,
 
     /// An optional token that a server can use to report partial results (e.g. streaming) to
     /// the client.
-    partialResultToken: Undefinedable(ProgressToken),
+    partialResultToken: ?ProgressToken = null,
 };
 pub const SemanticTokensDeltaRequest = struct {
     comptime method: []const u8 = "textDocument/semanticTokens/full/delta",
+    id: RequestId,
     params: SemanticTokensDeltaParams,
 };
 pub const SemanticTokensRangeParams = struct {
@@ -4106,18 +4166,20 @@ pub const SemanticTokensRangeParams = struct {
     range: Range,
 
     /// An optional token that a server can use to report work done progress.
-    workDoneToken: Undefinedable(ProgressToken),
+    workDoneToken: ?ProgressToken = null,
 
     /// An optional token that a server can use to report partial results (e.g. streaming) to
     /// the client.
-    partialResultToken: Undefinedable(ProgressToken),
+    partialResultToken: ?ProgressToken = null,
 };
 pub const SemanticTokensRangeRequest = struct {
     comptime method: []const u8 = "textDocument/semanticTokens/range",
+    id: RequestId,
     params: SemanticTokensRangeParams,
 };
 pub const SemanticTokensRefreshRequest = struct {
     comptime method: []const u8 = "workspace/semanticTokens/refresh",
+    id: RequestId,
 };
 pub const SemanticTokensRegistrationType = struct {
     pub const method = "textDocument/semanticTokens";
@@ -4134,19 +4196,19 @@ pub const ShowDocumentParams = struct {
     /// Indicates to show the resource in an external program.
     /// To show for example `https://code.visualstudio.com/`
     /// in the default WEB browser set `external` to `true`.
-    external: Undefinedable(bool),
+    external: ?bool = null,
 
     /// An optional property to indicate whether the editor
     /// showing the document should take focus or not.
     /// Clients might ignore this property if an external
     /// program in started.
-    takeFocus: Undefinedable(bool),
+    takeFocus: ?bool = null,
 
     /// An optional selection range if the document is a text
     /// document. Clients might ignore the property if an
     /// external program is started or the file is not a text
     /// file.
-    selection: Undefinedable(Range),
+    selection: ?Range = null,
 };
 
 /// A request to show a document. This request might open an
@@ -4155,6 +4217,7 @@ pub const ShowDocumentParams = struct {
 /// will very likely open the URI in a WEB browser.
 pub const ShowDocumentRequest = struct {
     comptime method: []const u8 = "window/showDocument",
+    id: RequestId,
     params: ShowDocumentParams,
 };
 
@@ -4176,7 +4239,7 @@ pub const LinkedEditingRangeClientCapabilities = struct {
     /// Whether implementation supports dynamic registration. If this is set to `true`
     /// the client supports the new `(TextDocumentRegistrationOptions & StaticRegistrationOptions)`
     /// return value for the corresponding server capability as well.
-    dynamicRegistration: Undefinedable(bool),
+    dynamicRegistration: ?bool = null,
 };
 
 /// The result of a linked editing range request.
@@ -4188,10 +4251,10 @@ pub const LinkedEditingRanges = struct {
     /// An optional word pattern (regular expression) that describes valid contents for
     /// the given ranges. If no pattern is provided, the client configuration's word
     /// pattern will be used.
-    wordPattern: Undefinedable([]const u8),
+    wordPattern: ?[]const u8 = null,
 };
 pub const LinkedEditingRangeOptions = struct {
-    workDoneProgress: Undefinedable(bool),
+    workDoneProgress: ?bool = null,
 };
 pub const LinkedEditingRangeParams = struct {
     /// The text document.
@@ -4201,68 +4264,69 @@ pub const LinkedEditingRangeParams = struct {
     position: Position,
 
     /// An optional token that a server can use to report work done progress.
-    workDoneToken: Undefinedable(ProgressToken),
+    workDoneToken: ?ProgressToken = null,
 };
 pub const LinkedEditingRangeRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
-    workDoneProgress: Undefinedable(bool),
+    workDoneProgress: ?bool = null,
 
     /// The id used to register the request. The id can be used to deregister
     /// the request again. See also Registration#id.
-    id: Undefinedable([]const u8),
+    id: ?[]const u8 = null,
 };
 
 /// A request to provide ranges that can be edited together.
 pub const LinkedEditingRangeRequest = struct {
     comptime method: []const u8 = "textDocument/linkedEditingRange",
+    id: RequestId,
     params: LinkedEditingRangeParams,
 };
 
 /// Options for notifications/requests for user operations on files.
 pub const FileOperationOptions = struct {
     /// The server is interested in didCreateFiles notifications.
-    didCreate: Undefinedable(FileOperationRegistrationOptions),
+    didCreate: ?FileOperationRegistrationOptions = null,
 
     /// The server is interested in willCreateFiles requests.
-    willCreate: Undefinedable(FileOperationRegistrationOptions),
+    willCreate: ?FileOperationRegistrationOptions = null,
 
     /// The server is interested in didRenameFiles notifications.
-    didRename: Undefinedable(FileOperationRegistrationOptions),
+    didRename: ?FileOperationRegistrationOptions = null,
 
     /// The server is interested in willRenameFiles requests.
-    willRename: Undefinedable(FileOperationRegistrationOptions),
+    willRename: ?FileOperationRegistrationOptions = null,
 
     /// The server is interested in didDeleteFiles file notifications.
-    didDelete: Undefinedable(FileOperationRegistrationOptions),
+    didDelete: ?FileOperationRegistrationOptions = null,
 
     /// The server is interested in willDeleteFiles file requests.
-    willDelete: Undefinedable(FileOperationRegistrationOptions),
+    willDelete: ?FileOperationRegistrationOptions = null,
 };
 
 /// Capabilities relating to events from file operations by the user in the client.
 pub const FileOperationClientCapabilities = struct {
     /// Whether the client supports dynamic registration for file requests/notifications.
-    dynamicRegistration: Undefinedable(bool),
+    dynamicRegistration: ?bool = null,
 
     /// The client has support for sending didCreateFiles notifications.
-    didCreate: Undefinedable(bool),
+    didCreate: ?bool = null,
 
     /// The client has support for willCreateFiles requests.
-    willCreate: Undefinedable(bool),
+    willCreate: ?bool = null,
 
     /// The client has support for sending didRenameFiles notifications.
-    didRename: Undefinedable(bool),
+    didRename: ?bool = null,
 
     /// The client has support for willRenameFiles requests.
-    willRename: Undefinedable(bool),
+    willRename: ?bool = null,
 
     /// The client has support for sending didDeleteFiles notifications.
-    didDelete: Undefinedable(bool),
+    didDelete: ?bool = null,
 
     /// The client has support for willDeleteFiles requests.
-    willDelete: Undefinedable(bool),
+    willDelete: ?bool = null,
 };
 
 /// The options to register for file operations.
@@ -4274,7 +4338,7 @@ pub const FileOperationRegistrationOptions = struct {
 /// Matching options for the file operation pattern.
 pub const FileOperationPatternOptions = struct {
     /// The pattern should be matched ignoring casing.
-    ignoreCase: Undefinedable(bool),
+    ignoreCase: ?bool = null,
 };
 
 /// A pattern kind describing if a glob pattern matches a file a folder or
@@ -4290,6 +4354,7 @@ pub const FileOperationPatternKind = struct {
 /// files were created from within the client.
 pub const DidCreateFilesNotification = struct {
     comptime method: []const u8 = "workspace/didCreateFiles",
+    id: RequestId,
     params: CreateFilesParams,
 };
 
@@ -4309,6 +4374,7 @@ pub const FileCreate = struct {
 /// created as long as the creation is triggered from within the client.
 pub const WillCreateFilesRequest = struct {
     comptime method: []const u8 = "workspace/willCreateFiles",
+    id: RequestId,
     params: CreateFilesParams,
 };
 
@@ -4316,6 +4382,7 @@ pub const WillCreateFilesRequest = struct {
 /// files were renamed from within the client.
 pub const DidRenameFilesNotification = struct {
     comptime method: []const u8 = "workspace/didRenameFiles",
+    id: RequestId,
     params: RenameFilesParams,
 };
 
@@ -4339,6 +4406,7 @@ pub const FileRename = struct {
 /// renamed as long as the rename is triggered from within the client.
 pub const WillRenameFilesRequest = struct {
     comptime method: []const u8 = "workspace/willRenameFiles",
+    id: RequestId,
     params: RenameFilesParams,
 };
 
@@ -4346,6 +4414,7 @@ pub const WillRenameFilesRequest = struct {
 /// deleted as long as the deletion is triggered from within the client.
 pub const DidDeleteFilesNotification = struct {
     comptime method: []const u8 = "workspace/didDeleteFiles",
+    id: RequestId,
     params: DeleteFilesParams,
 };
 
@@ -4365,6 +4434,7 @@ pub const FileDelete = struct {
 /// files were deleted from within the client.
 pub const WillDeleteFilesRequest = struct {
     comptime method: []const u8 = "workspace/willDeleteFiles",
+    id: RequestId,
     params: DeleteFilesParams,
 };
 
@@ -4395,7 +4465,7 @@ pub const Moniker = struct {
     unique: UniquenessLevel,
 
     /// The moniker kind if known.
-    kind: Undefinedable(MonikerKind),
+    kind: ?MonikerKind = null,
 };
 
 /// Client capabilities specific to the moniker request.
@@ -4403,16 +4473,16 @@ pub const MonikerClientCapabilities = struct {
     /// Whether moniker supports dynamic registration. If this is set to `true`
     /// the client supports the new `MonikerRegistrationOptions` return value
     /// for the corresponding server capability as well.
-    dynamicRegistration: Undefinedable(bool),
+    dynamicRegistration: ?bool = null,
 };
 pub const MonikerOptions = struct {
-    workDoneProgress: Undefinedable(bool),
+    workDoneProgress: ?bool = null,
 };
 pub const MonikerRegistrationOptions = struct {
     /// A document selector to identify the scope of the registration. If set to null
     /// the document selector provided on the client side will be used.
     documentSelector: ?DocumentSelector,
-    workDoneProgress: Undefinedable(bool),
+    workDoneProgress: ?bool = null,
 };
 pub const MonikerParams = struct {
     /// The text document.
@@ -4422,11 +4492,11 @@ pub const MonikerParams = struct {
     position: Position,
 
     /// An optional token that a server can use to report work done progress.
-    workDoneToken: Undefinedable(ProgressToken),
+    workDoneToken: ?ProgressToken = null,
 
     /// An optional token that a server can use to report partial results (e.g. streaming) to
     /// the client.
-    partialResultToken: Undefinedable(ProgressToken),
+    partialResultToken: ?ProgressToken = null,
 };
 
 /// A request to get the moniker of a symbol at a given text document position.
@@ -4434,6 +4504,7 @@ pub const MonikerParams = struct {
 /// The response is of type [Moniker[]](#Moniker[]) or `null`.
 pub const MonikerRequest = struct {
     comptime method: []const u8 = "textDocument/moniker",
+    id: RequestId,
     params: MonikerParams,
 };
 pub const ColorProviderOptions = DocumentColorOptions;
@@ -4441,3 +4512,78 @@ pub const ColorOptions = DocumentColorOptions;
 pub const FoldingRangeProviderOptions = FoldingRangeOptions;
 pub const SelectionRangeProviderOptions = SelectionRangeOptions;
 pub const ColorRegistrationOptions = DocumentColorRegistrationOptions;
+
+pub const Request = union(enum) {
+    ApplyWorkspaceEditRequest: ApplyWorkspaceEditRequest,
+    CallHierarchyIncomingCallsRequest: CallHierarchyIncomingCallsRequest,
+    CallHierarchyOutgoingCallsRequest: CallHierarchyOutgoingCallsRequest,
+    CallHierarchyPrepareRequest: CallHierarchyPrepareRequest,
+    CodeActionRequest: CodeActionRequest,
+    CodeActionResolveRequest: CodeActionResolveRequest,
+    CodeLensRefreshRequest: CodeLensRefreshRequest,
+    CodeLensRequest: CodeLensRequest,
+    CodeLensResolveRequest: CodeLensResolveRequest,
+    ColorPresentationRequest: ColorPresentationRequest,
+    CompletionRequest: CompletionRequest,
+    CompletionResolveRequest: CompletionResolveRequest,
+    ConfigurationRequest: ConfigurationRequest,
+    DeclarationRequest: DeclarationRequest,
+    DefinitionRequest: DefinitionRequest,
+    DocumentColorRequest: DocumentColorRequest,
+    DocumentFormattingRequest: DocumentFormattingRequest,
+    DocumentHighlightRequest: DocumentHighlightRequest,
+    DocumentLinkRequest: DocumentLinkRequest,
+    DocumentLinkResolveRequest: DocumentLinkResolveRequest,
+    DocumentOnTypeFormattingRequest: DocumentOnTypeFormattingRequest,
+    DocumentRangeFormattingRequest: DocumentRangeFormattingRequest,
+    DocumentSymbolRequest: DocumentSymbolRequest,
+    ExecuteCommandRequest: ExecuteCommandRequest,
+    FoldingRangeRequest: FoldingRangeRequest,
+    HoverRequest: HoverRequest,
+    ImplementationRequest: ImplementationRequest,
+    InitializeRequest: InitializeRequest,
+    LinkedEditingRangeRequest: LinkedEditingRangeRequest,
+    MonikerRequest: MonikerRequest,
+    PrepareRenameRequest: PrepareRenameRequest,
+    ReferencesRequest: ReferencesRequest,
+    RegistrationRequest: RegistrationRequest,
+    RenameRequest: RenameRequest,
+    SelectionRangeRequest: SelectionRangeRequest,
+    SemanticTokensDeltaRequest: SemanticTokensDeltaRequest,
+    SemanticTokensRangeRequest: SemanticTokensRangeRequest,
+    SemanticTokensRefreshRequest: SemanticTokensRefreshRequest,
+    SemanticTokensRequest: SemanticTokensRequest,
+    ShowDocumentRequest: ShowDocumentRequest,
+    ShowMessageRequest: ShowMessageRequest,
+    ShutdownRequest: ShutdownRequest,
+    SignatureHelpRequest: SignatureHelpRequest,
+    TypeDefinitionRequest: TypeDefinitionRequest,
+    UnregistrationRequest: UnregistrationRequest,
+    WillCreateFilesRequest: WillCreateFilesRequest,
+    WillDeleteFilesRequest: WillDeleteFilesRequest,
+    WillRenameFilesRequest: WillRenameFilesRequest,
+    WillSaveTextDocumentWaitUntilRequest: WillSaveTextDocumentWaitUntilRequest,
+    WorkDoneProgressCreateRequest: WorkDoneProgressCreateRequest,
+    WorkspaceFoldersRequest: WorkspaceFoldersRequest,
+    WorkspaceSymbolRequest: WorkspaceSymbolRequest,
+};
+pub const Notification = union(enum) {
+    DidChangeConfigurationNotification: DidChangeConfigurationNotification,
+    DidChangeTextDocumentNotification: DidChangeTextDocumentNotification,
+    DidChangeWatchedFilesNotification: DidChangeWatchedFilesNotification,
+    DidChangeWorkspaceFoldersNotification: DidChangeWorkspaceFoldersNotification,
+    DidCloseTextDocumentNotification: DidCloseTextDocumentNotification,
+    DidCreateFilesNotification: DidCreateFilesNotification,
+    DidDeleteFilesNotification: DidDeleteFilesNotification,
+    DidOpenTextDocumentNotification: DidOpenTextDocumentNotification,
+    DidRenameFilesNotification: DidRenameFilesNotification,
+    DidSaveTextDocumentNotification: DidSaveTextDocumentNotification,
+    ExitNotification: ExitNotification,
+    InitializedNotification: InitializedNotification,
+    LogMessageNotification: LogMessageNotification,
+    PublishDiagnosticsNotification: PublishDiagnosticsNotification,
+    ShowMessageNotification: ShowMessageNotification,
+    TelemetryEventNotification: TelemetryEventNotification,
+    WillSaveTextDocumentNotification: WillSaveTextDocumentNotification,
+    WorkDoneProgressCancelNotification: WorkDoneProgressCancelNotification,
+};

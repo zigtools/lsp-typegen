@@ -22,6 +22,8 @@ var protocolSchemaEmitter = new TypeEmitter(writeStream, protocolSchema);
  * Damn nasty root types!! We don't want these!
  */
 const NUKE = [/MessageSignature/, /HandlerResult/, /integer/, /decimal/, /LSP.+/, /_.*/, /.+Handler/];
+let requestTypes = protocolSchema.children.filter(_ => _.name.endsWith("Request")).map(_ => _.name);
+let notificationTypes = protocolSchema.children.filter(_ => _.name.endsWith("Notification")).map(_ => _.name);
 
 writeStream.write(base);
 for (const child of utils.sortChildren(typeSchema.children)) {
@@ -37,6 +39,9 @@ for (const child of utils.sortChildren(protocolSchema.children)) {
     if (JOE.has(child.name) || NUKE.reduce((prev, curr) => prev || curr.test(child.name), false) || isModuleSource(child.sources)) continue;
     protocolSchemaEmitter.emitChild(child);
 }
+
+writeStream.write(`\npub const Request = union(enum) {${requestTypes.map(_ => `${_}: ${_},`).join("\n")}};`);
+writeStream.write(`\npub const Notification = union(enum) {${notificationTypes.map(_ => `${_}: ${_},`).join("\n")}};`);
 
 writeStream.close(() => {
     console.log("File generated!");

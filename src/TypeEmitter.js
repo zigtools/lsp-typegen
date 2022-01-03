@@ -242,9 +242,9 @@ module.exports = class TypeEmitter {
                     this.writeStream.write(`comptime ${utils.wrapName(child.name)}: ${utils.translateType(typeof child.type.value)} = ${JSON.stringify(child.type.value)},\n`);
                 } else {
                     this.writeStream.write(`${utils.wrapName(child.name)}: `);
-                    if (child.flags.isOptional) this.writeStream.write("?");
+                    if (child.flags.isOptional) this.writeStream.write("Undefinedable(");
                     this.emitType(child.type);
-                    if (child.flags.isOptional) this.writeStream.write(" = null");
+                    if (child.flags.isOptional) this.writeStream.write(")");
                     this.writeStream.write(",\n");
                 }
                 break;

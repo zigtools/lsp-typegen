@@ -2,3 +2,6 @@ zig-*
 *schema.json
 /node_modules
 /vendor
+/.gyro
+gyro.lock
+deps.zig

@@ -10,6 +10,11 @@ parser: std.json.Parser,
 read_buf: std.ArrayList(u8),
 write_buf: std.ArrayList(u8),
 
+const SampleDirection = enum {
+    client_to_server,
+    server_to_client,
+};
+
 const SampleEntryKind = enum {
     @"send-request",
     @"receive-request",
@@ -19,6 +24,13 @@ const SampleEntryKind = enum {
 
     @"send-notification",
     @"receive-notification",
+
+    fn getDirection(self: SampleEntryKind) SampleDirection {
+        return switch (self) {
+            .@"send-request", .@"send-response", .@"send-notification" => .client_to_server,
+            else => .server_to_client,
+        };
+    }
 };
 
 // TODO: Handle responses
@@ -98,7 +110,11 @@ test {
                         std.log.err("Cannot handle Request or Notification of method \"{s}\"", .{entry.message.Object.get("method").?.String});
                         break :a;
                     };
-                    std.log.err("{s}", .{requestOrNotification});
+                    if (requestOrNotification.params == .unknown)
+                        std.log.err("{s}: {s}", .{ requestOrNotification.method, requestOrNotification.params });
+                },
+                .@"send-response" => {
+                    // std.log.err("\nSEND RESPONSE\n", .{});
                 },
                 else => {},
             }

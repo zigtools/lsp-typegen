@@ -2,7 +2,8 @@ const std = @import("std");
 const json = std.json;
 const Tuple = std.meta.Tuple;
 
-const Undefinedable = @import("tres").Undefinedable;
+const tres = @import("tres");
+const Undefinedable = tres.Undefinedable;
 
 /// The LSP any type
 pub const LSPAny = std.json.Value;
@@ -1661,12 +1662,9 @@ pub const ServerCapabilities = struct {
 /// The requests parameter is of type [InitializeParams](#InitializeParams)
 /// the response if of type [InitializeResult](#InitializeResult) of a Thenable that
 /// resolves to such.
-pub const InitializeRequest = struct {
-    comptime method: []const u8 = "initialize",
-    id: RequestId,
-    params: InitializeParams,
-};
 pub const InitializeParams = struct {
+    const method = "initialize";
+
     /// The process Id of the parent process that started
     /// the server.
     processId: ?i64,
@@ -1715,23 +1713,19 @@ pub const InitializeParams = struct {
 };
 
 /// The result returned from an initialize request.
-pub fn InitializeResult(comptime T: type) type {
-    return struct {
-        /// The capabilities the language server provides.
-        capabilities: ServerCapabilities(
-            T,
-        ),
+pub const InitializeResult = struct {
+    /// The capabilities the language server provides.
+    capabilities: ServerCapabilities,
 
-        /// Information about the server.
-        serverInfo: Undefinedable(struct {
-            /// The name of the server as defined by the server.
-            name: []const u8,
+    /// Information about the server.
+    serverInfo: Undefinedable(struct {
+        /// The name of the server as defined by the server.
+        name: []const u8,
 
-            /// The server's version as defined by the server.
-            version: Undefinedable([]const u8),
-        }),
-    };
-}
+        /// The server's version as defined by the server.
+        version: Undefinedable([]const u8),
+    }),
+};
 
 /// The data type of the ResponseError if the
 /// initialize request fails.
@@ -1747,14 +1741,12 @@ pub const InitializeError = struct {
 pub const InitializeErrorCode = enum(i64) {
     unknownProtocolVersion = 1,
 };
-pub const InitializedParams = struct {};
 
 /// The initialized notification is sent from the client to the
 /// server after the client is fully initialized and the server
 /// is allowed to send requests from the server to the client.
-pub const InitializedNotification = struct {
-    comptime method: []const u8 = "initialized",
-    params: InitializedParams,
+pub const InitializedParams = struct {
+    const method = "initialized";
 };
 
 /// A shutdown request is sent from the client to the server.
@@ -1777,14 +1769,6 @@ pub const DidChangeConfigurationClientCapabilities = struct {
     dynamicRegistration: Undefinedable(bool),
 };
 
-/// The configuration change notification is sent from the client to the server
-/// when the client's configuration has changed. The notification contains
-/// the changed configuration as defined by the language client.
-pub const DidChangeConfigurationNotification = struct {
-    comptime method: []const u8 = "workspace/didChangeConfiguration",
-    id: RequestId,
-    params: DidChangeConfigurationParams,
-};
 pub const DidChangeConfigurationRegistrationOptions = struct {
     section: Undefinedable(union(enum) {
         string: []const u8,
@@ -1793,7 +1777,12 @@ pub const DidChangeConfigurationRegistrationOptions = struct {
 };
 
 /// The parameters of a change configuration notification.
+/// The configuration change notification is sent from the client to the server
+/// when the client's configuration has changed. The notification contains
+/// the changed configuration as defined by the language client.
 pub const DidChangeConfigurationParams = struct {
+    const method = "workspace/didChangeConfiguration";
+
     /// The actual changed settings
     settings: std.json.Value,
 };
@@ -4364,7 +4353,52 @@ pub const FoldingRangeProviderOptions = FoldingRangeOptions;
 pub const SelectionRangeProviderOptions = SelectionRangeOptions;
 pub const ColorRegistrationOptions = DocumentColorRegistrationOptions;
 
-pub const RequestOrNotification = union(enum) {
+pub const RequestOrNotification = struct {
+    const Self = @This();
+
+    jsonrpc: []const u8,
+    id: ?RequestId = null,
+    method: []const u8,
+    params: RequestOrNotificationParams,
+
+    pub fn isNotification(self: Self) bool {
+        return self.id == null;
+    }
+
+    fn RequestOrNotificationParseError() type {
+        @setEvalBranchQuota(100_000);
+
+        var err = tres.ParseInternalError(RequestId);
+        comptime for (std.meta.fields(RequestOrNotificationParams)) |field| {
+            err = err || tres.ParseInternalError(field.field_type);
+        };
+        return err;
+    }
+
+    pub fn tresParse(value: std.json.Value, options: tres.ParseOptions) RequestOrNotificationParseError()!Self {
+        @setEvalBranchQuota(100_000);
+
+        var object = value.Object;
+        var request_or_notif: Self = undefined;
+
+        request_or_notif.jsonrpc = object.get("jsonrpc").?.String;
+        request_or_notif.id = if (object.get("id")) |id| try tres.parse(RequestId, id, options) else null;
+        request_or_notif.method = object.get("method").?.String;
+        request_or_notif.params = .unknown;
+
+        inline for (std.meta.fields(RequestOrNotificationParams)) |field| {
+            if (field.field_type != void)
+                if (std.mem.eql(u8, request_or_notif.method, field.field_type.method)) {
+                    request_or_notif.params = @unionInit(RequestOrNotificationParams, field.name, try tres.parse(field.field_type, object.get("params").?, options));
+                };
+        }
+
+        return request_or_notif;
+    }
+};
+
+pub const RequestOrNotificationParams = union(enum) {
+    unknown: void,
     // ApplyWorkspaceEditRequest: ApplyWorkspaceEditRequest,
     // CallHierarchyIncomingCallsRequest: CallHierarchyIncomingCallsRequest,
     // CallHierarchyOutgoingCallsRequest: CallHierarchyOutgoingCallsRequest,
@@ -4392,7 +4426,7 @@ pub const RequestOrNotification = union(enum) {
     // FoldingRangeRequest: FoldingRangeRequest,
     // HoverRequest: HoverRequest,
     // ImplementationRequest: ImplementationRequest,
-    InitializeRequest: InitializeRequest,
+    initialize_request: InitializeParams,
     // LinkedEditingRangeRequest: LinkedEditingRangeRequest,
     // MonikerRequest: MonikerRequest,
     // PrepareRenameRequest: PrepareRenameRequest,
@@ -4418,7 +4452,7 @@ pub const RequestOrNotification = union(enum) {
     // WorkspaceFoldersRequest: WorkspaceFoldersRequest,
     // WorkspaceSymbolRequest: WorkspaceSymbolRequest,
 
-    // DidChangeConfigurationNotification: DidChangeConfigurationNotification,
+    did_change_configuration_notification: DidChangeConfigurationParams,
     // DidChangeTextDocumentNotification: DidChangeTextDocumentNotification,
     // DidChangeWatchedFilesNotification: DidChangeWatchedFilesNotification,
     // DidChangeWorkspaceFoldersNotification: DidChangeWorkspaceFoldersNotification,
@@ -4429,11 +4463,85 @@ pub const RequestOrNotification = union(enum) {
     // DidRenameFilesNotification: DidRenameFilesNotification,
     // DidSaveTextDocumentNotification: DidSaveTextDocumentNotification,
     // ExitNotification: ExitNotification,
-    InitializedNotification: InitializedNotification,
+    initialized_notification: InitializedParams,
     // LogMessageNotification: LogMessageNotification,
     // PublishDiagnosticsNotification: PublishDiagnosticsNotification,
     // ShowMessageNotification: ShowMessageNotification,
     // TelemetryEventNotification: TelemetryEventNotification,
     // WillSaveTextDocumentNotification: WillSaveTextDocumentNotification,
     // WorkDoneProgressCancelNotification: WorkDoneProgressCancelNotification,
+};
+
+pub const ErrorCode = enum(i64) {
+    // Defined by JSON RPC
+    parse_error = -32700,
+    invalid_request = -32600,
+    method_not_found = -32601,
+    invalid_params = -32602,
+    internal_error = -32603,
+
+    /// This is the start range of JSON RPC reserved error codes.
+    /// It doesn't denote a real error code. No LSP error codes should
+    /// be defined between the start and end range. For backwards
+    /// compatibility the `ServerNotInitialized` and the `UnknownErrorCode`
+    /// are left in the range.
+    jsonrpc_reserved_error_range_start = -32099,
+
+    /// Error code indicating that a server received a notification or
+    /// request before the server has received the `initialize` request.
+    server_not_initialized = -32002,
+    unknown_error_code = -32001,
+
+    /// A request failed but it was syntactically correct, e.g the
+    /// method name was known and the parameters were valid. The error
+    /// message should contain human readable information about why
+    /// the request failed.
+    request_failed = -32803,
+
+    /// The server cancelled the request. This error code should
+    /// only be used for requests that explicitly support being
+    /// server cancellable.
+    server_cancelled = -32802,
+
+    /// The server detected that the content of a document got
+    /// modified outside normal conditions. A server should
+    /// NOT send this error code if it detects a content change
+    /// in it unprocessed messages. The result even computed
+    /// on an older state might still be useful for the client.
+    ///
+    /// If a client decides that a result is not of any use anymore
+    /// the client should cancel the request.
+    content_modified = -32801,
+
+    /// The client has canceled a request and a server as detected
+    /// the cancel.
+    request_cancelled = -32800,
+
+    _,
+};
+
+pub const ResponseError = struct {
+    /// A number indicating the error type that occurred.
+    code: ErrorCode,
+
+    /// A string providing a short description of the error.
+    message: []const u8,
+
+    /// A primitive or structured value that contains additional
+    /// information about the error. Can be omitted.
+    data: Undefinedable(std.json.Value),
+};
+
+pub const Response = struct {
+    const Self = @This();
+
+    jsonrpc: []const u8,
+    id: RequestId,
+    result: ResponseParams,
+    @"error": ResponseError,
+};
+
+pub const ResponseParams = union(enum) {
+    initialize_result: InitializeResult,
+    shutdown_result: @TypeOf(null),
 };

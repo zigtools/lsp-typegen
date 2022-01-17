@@ -1,4 +1,4 @@
-# lspoop
+# Zig LSP Typegen
 
 Crappy LSP spec-based Zig struct generator. It "works."
 

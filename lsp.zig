@@ -1918,11 +1918,6 @@ pub const TextDocumentSyncOptions = struct {
 };
 
 /// The parameters send in a open text document notification
-pub const DidOpenTextDocumentParams = struct {
-    /// The document that was opened.
-    textDocument: TextDocumentItem,
-};
-
 /// The document open notification is sent from the client to the server to signal
 /// newly opened text documents. The document's truth is now managed by the client
 /// and the server must not try to read the document's truth using the document's
@@ -1931,10 +1926,11 @@ pub const DidOpenTextDocumentParams = struct {
 /// be sent more than once without a corresponding close notification send before.
 /// This means open and close notification must be balanced and the max open count
 /// is one.
-pub const DidOpenTextDocumentNotification = struct {
-    comptime method: []const u8 = "textDocument/didOpen",
-    id: RequestId,
-    params: DidOpenTextDocumentParams,
+pub const DidOpenTextDocumentParams = struct {
+    const method = "textDocument/didOpen";
+
+    /// The document that was opened.
+    textDocument: TextDocumentItem,
 };
 
 /// An event describing a change to a text document. If range and rangeLength are omitted
@@ -2660,8 +2656,14 @@ pub const DocumentSymbolClientCapabilities = struct {
     labelSupport: Undefinedable(bool),
 };
 
+/// A request to list all symbols found in a given text document. The request's
+/// parameter is of type [TextDocumentIdentifier](#TextDocumentIdentifier) the
+/// response is of type [SymbolInformation[]](#SymbolInformation) or a Thenable
+/// that resolves to such.
 /// Parameters for a [DocumentSymbolRequest](#DocumentSymbolRequest).
 pub const DocumentSymbolParams = struct {
+    const method = "textDocument/documentSymbol";
+
     /// The text document.
     textDocument: TextDocumentIdentifier,
 
@@ -2691,16 +2693,6 @@ pub const DocumentSymbolRegistrationOptions = struct {
     /// are shown for the same document.
     label: Undefinedable([]const u8),
     workDoneProgress: Undefinedable(bool),
-};
-
-/// A request to list all symbols found in a given text document. The request's
-/// parameter is of type [TextDocumentIdentifier](#TextDocumentIdentifier) the
-/// response is of type [SymbolInformation[]](#SymbolInformation) or a Thenable
-/// that resolves to such.
-pub const DocumentSymbolRequest = struct {
-    comptime method: []const u8 = "textDocument/documentSymbol",
-    id: RequestId,
-    params: DocumentSymbolParams,
 };
 
 /// The Client Capabilities of a [CodeActionRequest](#CodeActionRequest).
@@ -4421,7 +4413,7 @@ pub const RequestOrNotificationParams = union(enum) {
     // DocumentLinkResolveRequest: DocumentLinkResolveRequest,
     // DocumentOnTypeFormattingRequest: DocumentOnTypeFormattingRequest,
     // DocumentRangeFormattingRequest: DocumentRangeFormattingRequest,
-    // DocumentSymbolRequest: DocumentSymbolRequest,
+    document_symbol_request: DocumentSymbolParams,
     // ExecuteCommandRequest: ExecuteCommandRequest,
     // FoldingRangeRequest: FoldingRangeRequest,
     // HoverRequest: HoverRequest,
@@ -4459,7 +4451,7 @@ pub const RequestOrNotificationParams = union(enum) {
     // DidCloseTextDocumentNotification: DidCloseTextDocumentNotification,
     // DidCreateFilesNotification: DidCreateFilesNotification,
     // DidDeleteFilesNotification: DidDeleteFilesNotification,
-    // DidOpenTextDocumentNotification: DidOpenTextDocumentNotification,
+    did_open_text_document_notification: DidOpenTextDocumentParams,
     // DidRenameFilesNotification: DidRenameFilesNotification,
     // DidSaveTextDocumentNotification: DidSaveTextDocumentNotification,
     // ExitNotification: ExitNotification,

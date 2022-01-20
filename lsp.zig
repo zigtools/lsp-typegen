@@ -1193,16 +1193,13 @@ pub const Registration = struct {
     /// Options necessary for the registration.
     registerOptions: Undefinedable(std.json.Value),
 };
-pub const RegistrationParams = struct {
-    registrations: []Registration,
-};
 
 /// The `client/registerCapability` request is sent from the server to the client to register a new capability
 /// handler on the client side.
-pub const RegistrationRequest = struct {
-    comptime method: []const u8 = "client/registerCapability",
-    id: RequestId,
-    params: RegistrationParams,
+pub const RegistrationParams = struct {
+    const method = "client/registerCapability";
+
+    registrations: []Registration,
 };
 
 /// General parameters to unregister a request or notification.
@@ -2929,8 +2926,11 @@ pub const DocumentLinkClientCapabilities = struct {
     tooltipSupport: Undefinedable(bool),
 };
 
+/// A request to provide document links
 /// The parameters of a [DocumentLinkRequest](#DocumentLinkRequest).
 pub const DocumentLinkParams = struct {
+    const method = "textDocument/documentLink";
+
     /// The document to provide document links for.
     textDocument: TextDocumentIdentifier,
 
@@ -2958,13 +2958,6 @@ pub const DocumentLinkRegistrationOptions = struct {
     /// Document links have a resolve provider as well.
     resolveProvider: Undefinedable(bool),
     workDoneProgress: Undefinedable(bool),
-};
-
-/// A request to provide document links
-pub const DocumentLinkRequest = struct {
-    comptime method: []const u8 = "textDocument/documentLink",
-    id: RequestId,
-    params: DocumentLinkParams,
 };
 
 /// Request to resolve additional information for a given document link. The request's
@@ -3418,16 +3411,6 @@ pub const ConfigurationItem = struct {
     section: Undefinedable([]const u8),
 };
 
-/// A request to list all color symbols found in a given text document. The request's
-/// parameter is of type [DocumentColorParams](#DocumentColorParams) the
-/// response is of type [ColorInformation[]](#ColorInformation) or a Thenable
-/// that resolves to such.
-pub const DocumentColorRequest = struct {
-    comptime method: []const u8 = "textDocument/documentColor",
-    id: RequestId,
-    params: DocumentColorParams,
-};
-
 /// A request to list all presentation for a color. The request's
 /// parameter is of type [ColorPresentationParams](#ColorPresentationParams) the
 /// response is of type [ColorInformation[]](#ColorInformation) or a Thenable
@@ -3441,8 +3424,14 @@ pub const DocumentColorOptions = struct {
     workDoneProgress: Undefinedable(bool),
 };
 
+/// A request to list all color symbols found in a given text document. The request's
+/// parameter is of type [DocumentColorParams](#DocumentColorParams) the
+/// response is of type [ColorInformation[]](#ColorInformation) or a Thenable
+/// that resolves to such.
 /// Parameters for a [DocumentColorRequest](#DocumentColorRequest).
 pub const DocumentColorParams = struct {
+    const method = "textDocument/documentColor";
+
     /// The text document.
     textDocument: TextDocumentIdentifier,
 
@@ -4406,10 +4395,10 @@ pub const RequestOrNotificationParams = union(enum) {
     // ConfigurationRequest: ConfigurationRequest,
     // DeclarationRequest: DeclarationRequest,
     // DefinitionRequest: DefinitionRequest,
-    // DocumentColorRequest: DocumentColorRequest,
+    document_color_request: DocumentColorParams,
     // DocumentFormattingRequest: DocumentFormattingRequest,
     // DocumentHighlightRequest: DocumentHighlightRequest,
-    // DocumentLinkRequest: DocumentLinkRequest,
+    document_link_request: DocumentLinkParams,
     // DocumentLinkResolveRequest: DocumentLinkResolveRequest,
     // DocumentOnTypeFormattingRequest: DocumentOnTypeFormattingRequest,
     // DocumentRangeFormattingRequest: DocumentRangeFormattingRequest,
@@ -4423,7 +4412,7 @@ pub const RequestOrNotificationParams = union(enum) {
     // MonikerRequest: MonikerRequest,
     // PrepareRenameRequest: PrepareRenameRequest,
     // ReferencesRequest: ReferencesRequest,
-    // RegistrationRequest: RegistrationRequest,
+    registration_request: RegistrationParams,
     // RenameRequest: RenameRequest,
     // SelectionRangeRequest: SelectionRangeRequest,
     // SemanticTokensDeltaRequest: SemanticTokensDeltaRequest,
